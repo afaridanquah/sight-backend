@@ -3,10 +3,10 @@ package verification_test
 import (
 	"testing"
 
-	"github.com/afaridanquah/verifylab-backend/internal/domain/customer"
-	"github.com/afaridanquah/verifylab-backend/internal/domain/verification"
-	"github.com/afaridanquah/verifylab-backend/internal/domain/verification/valueobject"
-	vo "github.com/afaridanquah/verifylab-backend/internal/valueobject"
+	"github.com/afaridanquah/verifylab-service/internal/domain/customer"
+	"github.com/afaridanquah/verifylab-service/internal/domain/verification"
+	"github.com/afaridanquah/verifylab-service/internal/domain/verification/valueobject"
+	vo "github.com/afaridanquverifylab-serviceend/internal/valueobject"
 )
 
 func TestAddNewVerification(t *testing.T) {

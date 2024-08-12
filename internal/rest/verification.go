@@ -4,9 +4,9 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"github.com/afaridanquah/verifylab-backend/internal"
-	"github.com/afaridanquah/verifylab-backend/internal/params"
-	"github.com/afaridanquah/verifylab-backend/internal/service/verification"
+	"github.com/afaridanquah/verifylab-service/internal"
+	"github.com/afaridanquah/verifylab-service/internal/params"
+	"github.com/afaridanquah/verifylab-service/internal/service/verification"
 	"github.com/go-chi/chi/v5"
 )
 

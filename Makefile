@@ -1,4 +1,4 @@
-BINARY=verifylab-backend
+BINARY=verifylab-service
 
 hello:
 	echo "Hello"

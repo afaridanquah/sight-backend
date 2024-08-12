@@ -3,8 +3,8 @@ package customer
 import (
 	"errors"
 
-	"github.com/afaridanquah/verifylab-backend/internal/domain/customer/valueobject"
-	vo "github.com/afaridanquah/verifylab-backend/internal/valueobject"
+	"github.com/afaridanquah/verifylab-service/internal/domain/customer/valueobject"
+	vo "github.com/afaridanquverifylab-serviceend/internal/valueobject"
 )
 
 var (

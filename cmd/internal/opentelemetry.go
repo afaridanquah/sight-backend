@@ -3,8 +3,8 @@ package internal
 import (
 	"context"
 
-	"github.com/afaridanquah/verifylab-backend/internal"
-	"github.com/afaridanquah/verifylab-backend/internal/envvar"
+	"github.com/afaridanquah/verifylab-service/internal"
+	"github.com/afaridanquah/verifylab-service/internal/envvar"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/exporters/prometheus"

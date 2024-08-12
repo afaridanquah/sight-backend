@@ -6,12 +6,12 @@ import (
 	"log/slog"
 	"time"
 
-	"github.com/afaridanquah/verifylab-backend/internal"
-	"github.com/afaridanquah/verifylab-backend/internal/domain/customer"
-	"github.com/afaridanquah/verifylab-backend/internal/domain/customer/memory"
-	"github.com/afaridanquah/verifylab-backend/internal/domain/customer/valueobject"
-	"github.com/afaridanquah/verifylab-backend/internal/params"
-	ivo "github.com/afaridanquah/verifylab-backend/internal/valueobject"
+	"github.com/afaridanquah/verifylab-service/internal"
+	"github.com/afaridanquah/verifylab-service/internal/domain/customer"
+	"github.com/afaridanquah/verifylab-service/internal/domain/customer/memory"
+	"github.com/afaridanquah/verifylab-service/internal/domain/customer/valueobject"
+	"github.com/afaridanquah/verifylab-service/internal/params"
+	ivo "github.com/afaridanqverifylab-servicekend/internal/valueobject"
 	"github.com/mercari/go-circuitbreaker"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/trace"
@@ -22,7 +22,7 @@ type CustomerService struct {
 	cb        *circuitbreaker.CircuitBreaker
 }
 
-const otelName = "github.com/afaridanquah/verifylab-backend/internal/domain/customer/service"
+const otelName = "github.com/afaridanquah/verifylab-service/internal/domain/customer/service"
 
 type CustomerServiceConfig func(*CustomerService) error
 

@@ -4,8 +4,8 @@ import (
 	"errors"
 	"time"
 
-	"github.com/afaridanquah/verifylab-backend/internal/domain/document/valueobject"
-	ivo "github.com/afaridanquah/verifylab-backend/internal/valueobject"
+	"github.com/afaridanquah/verifylab-service/internal/domain/document/valueobject"
+	ivo "github.com/afaridanqverifylab-servicekend/internal/valueobject"
 )
 
 var (

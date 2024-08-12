@@ -4,7 +4,7 @@ import (
 	"errors"
 	"time"
 
-	"github.com/afaridanquah/verifylab-backend/internal/domain/verification/valueobject"
+	"github.com/afaridanquah/verifylab-service/internal/domain/verification/valueobject"
 )
 
 var (

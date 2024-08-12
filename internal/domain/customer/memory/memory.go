@@ -4,8 +4,8 @@ import (
 	"context"
 	"sync"
 
-	"github.com/afaridanquah/verifylab-backend/internal/domain/customer"
-	"github.com/afaridanquah/verifylab-backend/internal/domain/customer/valueobject"
+	"github.com/afaridanquah/verifylab-service/internal/domain/customer"
+	"github.com/afaridanquah/verifylab-service/internal/domain/customer/valueobject"
 )
 
 type MemoryRepository struct {

@@ -4,8 +4,8 @@ import (
 	"context"
 	"sync"
 
-	"github.com/afaridanquah/verifylab-backend/internal/domain/verification"
-	"github.com/afaridanquah/verifylab-backend/internal/domain/verification/valueobject"
+	"github.com/afaridanquah/verifylab-service/internal/domain/verification"
+	"github.com/afaridanquah/verifylab-service/internal/domain/verification/valueobject"
 )
 
 type Respository struct {

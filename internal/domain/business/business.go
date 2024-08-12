@@ -3,7 +3,7 @@ package business
 import (
 	"errors"
 
-	"github.com/afaridanquah/verifylab-backend/internal/domain/business/valueobject"
+	"github.com/afaridanquah/verifylab-service/internal/domain/business/valueobject"
 )
 
 type Business struct {

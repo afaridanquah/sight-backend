@@ -5,7 +5,7 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/afaridanquah/verifylab-backend/internal"
+	"github.com/afaridanquah/verifylab-service/internal"
 	"github.com/go-chi/render"
 	validation "github.com/go-ozzo/ozzo-validation/v4"
 	"go.opentelemetry.io/otel"

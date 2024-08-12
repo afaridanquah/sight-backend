@@ -6,10 +6,10 @@ import (
 	"log/slog"
 	"time"
 
-	"github.com/afaridanquah/verifylab-backend/internal"
-	"github.com/afaridanquah/verifylab-backend/internal/domain/verification"
-	"github.com/afaridanquah/verifylab-backend/internal/domain/verification/memory"
-	"github.com/afaridanquah/verifylab-backend/internal/params"
+	"github.com/afaridanquah/verifylab-service/internal"
+	"github.com/afaridanquah/verifylab-service/internal/domain/verification"
+	"github.com/afaridanquah/verifylab-service/internal/domain/verification/memory"
+	"github.com/afaridanquah/verifylab-service/internal/params"
 	"github.com/mercari/go-circuitbreaker"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/trace"
@@ -20,7 +20,7 @@ type VerificationService struct {
 	cb            *circuitbreaker.CircuitBreaker
 }
 
-const otelName = "github.com/afaridanquah/verifylab-backend/internal/domain/verification/service"
+const otelName = "github.com/afaridanquah/verifylab-service/internal/domain/verification/service"
 
 type VerificationServiceConfig func(*VerificationService) error
 

@@ -3,9 +3,9 @@ package customer_test
 import (
 	"testing"
 
-	"github.com/afaridanquah/verifylab-backend/internal/domain/customer"
-	cvo "github.com/afaridanquah/verifylab-backend/internal/domain/customer/valueobject"
-	"github.com/afaridanquah/verifylab-backend/internal/valueobject"
+	"github.com/afaridanquah/verifylab-service/internal/domain/customer"
+	cvo "github.com/afaridanquah/verifylab-service/internal/domain/customer/valueobject"
+	"github.com/afaridanquah/verifylab-service/internal/valueobject"
 )
 
 func TestCustomerNewCustomer(t *testing.T) {
