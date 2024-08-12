@@ -1,0 +1,35 @@
+services: 
+  verifylab:
+    build: 
+      context: .
+      dockerfile: './Dockerfile'
+    ports:
+      - 9235:9235
+    command: verifylab -env /api/env.example -address 9235
+    environment:
+      JAEGER_ENDPOINT: "http://jaeger:14268/api/traces"
+      VAULT_ADDRESS:   "http://vault:8300"
+    depends_on:
+      - vault
+      - prometheus
+      - jaeger
+  vault:
+    image: hashicorp/vault
+    ports:
+      - "8300:8300"
+    cap_add:
+      - IPC_LOCK
+    environment:
+      VAULT_DEV_LISTEN_ADDRESS: "0.0.0.0:8300"
+      VAULT_DEV_ROOT_TOKEN_ID:  "myroot"
+  jaeger:
+    image: jaegertracing/all-in-one:latest
+    ports:
+      - "16686:16686"
+      - "14268:14268"
+  prometheus:
+    image: prom/prometheus
+    ports:
+      - "9090:9090"
+    # volumes:
+    #   - ./docs/prometheus.yml:/etc/prometheus/prometheus.yml
