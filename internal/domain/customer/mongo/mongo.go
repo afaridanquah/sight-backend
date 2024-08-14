@@ -4,7 +4,7 @@ import (
 	"context"
 	"time"
 
-	"github.com/afaridanquah/verifylab-service/internal/domain/customer"
+	"bitbucket.org/msafaridanquah/verifylab-service/internal/domain/customer"
 	"github.com/google/uuid"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"

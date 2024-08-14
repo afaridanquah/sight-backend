@@ -4,7 +4,7 @@ import (
 	"context"
 	"errors"
 
-	"github.com/afaridanquah/verifylab-service/internal/domain/customer/valueobject"
+	"bitbucket.org/msafaridanquah/verifylab-service/internal/valueobject"
 )
 
 var (

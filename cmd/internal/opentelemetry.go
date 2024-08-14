@@ -2,11 +2,11 @@ package internal
 
 import (
 	"context"
+	"time"
 
-	"github.com/afaridanquah/verifylab-service/internal"
-	"github.com/afaridanquah/verifylab-service/internal/envvar"
+	"bitbucket.org/msafaridanquah/verifylab-service/internal"
+	"bitbucket.org/msafaridanquah/verifylab-service/internal/envvar"
 	"go.opentelemetry.io/otel"
-	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/exporters/prometheus"
 	"go.opentelemetry.io/otel/propagation"
 	"go.opentelemetry.io/otel/sdk/resource"
@@ -23,21 +23,29 @@ func NewOTExporter(conf *envvar.Configuration) (*prometheus.Exporter, error) {
 		return nil, internal.WrapErrorf(err, internal.ErrorCodeUnknown, "prometheus.New")
 	}
 
-	jaegerEndpoint, _ := conf.Get("JAEGER_ENDPOINT")
+	// jaegerEndpoint, _ := conf.Get("JAEGER_ENDPOINT")
 
-	jaegerExporter, err := otlptracehttp.New(context.Background(), otlptracehttp.WithEndpoint(jaegerEndpoint))
+	jaegerExporter, err := otlptracehttp.New(
+		context.Background(),
+		// otlptracehttp.WithInsecure(),
+	)
 
 	if err != nil {
 		return nil, internal.WrapErrorf(err, internal.ErrorCodeUnknown, "jaeger.New")
 	}
 
 	tp := trace.NewTracerProvider(
-		trace.WithSyncer(jaegerExporter),
-		trace.WithSampler(trace.AlwaysSample()),
-		trace.WithResource(resource.NewSchemaless(attribute.KeyValue{
-			Key:   semconv.ServiceNameKey,
-			Value: attribute.StringValue("verifylab"),
-		})),
+		trace.WithBatcher(
+			jaegerExporter,
+			trace.WithMaxExportBatchSize(trace.DefaultMaxExportBatchSize),
+			trace.WithBatchTimeout(trace.DefaultScheduleDelay*time.Millisecond),
+			trace.WithMaxExportBatchSize(trace.DefaultMaxExportBatchSize),
+		),
+		trace.WithResource(
+			resource.NewWithAttributes(
+				semconv.SchemaURL,
+				semconv.ServiceNameKey.String("verifylab-service"),
+			)),
 	)
 
 	otel.SetTracerProvider(tp)

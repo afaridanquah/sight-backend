@@ -4,8 +4,8 @@ import (
 	"context"
 	"sync"
 
-	"github.com/afaridanquah/verifylab-service/internal/domain/verification"
-	"github.com/afaridanquah/verifylab-service/internal/domain/verification/valueobject"
+	"bitbucket.org/msafaridanquah/verifylab-service/internal/domain/verification"
+	"bitbucket.org/msafaridanquah/verifylab-service/internal/domain/verification/valueobject"
 )
 
 type Respository struct {
@@ -27,7 +27,7 @@ func (mr *Respository) Add(ctx context.Context, v verification.Verification) err
 		return verification.ErrVerificationCannotBeAdded
 	}
 
-	mr.verifications[string(v.ID())] = v
+	mr.verifications[v.ID().String()] = v
 
 	return nil
 }

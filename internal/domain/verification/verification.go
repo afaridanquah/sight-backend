@@ -4,7 +4,8 @@ import (
 	"errors"
 	"time"
 
-	"github.com/afaridanquah/verifylab-service/internal/domain/verification/valueobject"
+	"bitbucket.org/msafaridanquah/verifylab-service/internal/domain/verification/valueobject"
+	ivo "bitbucket.org/msafaridanquah/verifylab-service/internal/valueobject"
 )
 
 var (
@@ -14,7 +15,7 @@ var (
 )
 
 type Verification struct {
-	id               valueobject.ID
+	id               ivo.ID
 	referenceId      string
 	status           valueobject.Status
 	person           valueobject.Person
@@ -25,8 +26,8 @@ type Verification struct {
 
 type VerificationOption func(*Verification)
 
-func New(id valueobject.ID, vt valueobject.VerificationType, p valueobject.Person, opts ...VerificationOption) (*Verification, error) {
-	if id == "" {
+func New(id ivo.ID, vt valueobject.VerificationType, p valueobject.Person, opts ...VerificationOption) (*Verification, error) {
+	if id == (ivo.ID{}) {
 		return &Verification{}, ErrVerificationIdIsRequired
 	}
 
@@ -58,16 +59,22 @@ func (ver *Verification) WithTimestamp() VerificationOption {
 	}
 }
 
+func (ver *Verification) WithReferenceID(id string) VerificationOption {
+	return func(v *Verification) {
+		v.referenceId = id
+	}
+}
+
 func (ver *Verification) WithStatus(s valueobject.Status) VerificationOption {
 	return func(v *Verification) {
 		ver.status = s
 	}
 }
 
-func (ver Verification) ID() valueobject.ID {
+func (ver Verification) ID() ivo.ID {
 	return ver.id
 }
 
 func (ver Verification) StringID() string {
-	return string(ver.id)
+	return string(ver.id.String())
 }

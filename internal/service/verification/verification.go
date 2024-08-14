@@ -6,26 +6,30 @@ import (
 	"log/slog"
 	"time"
 
-	"github.com/afaridanquah/verifylab-service/internal"
-	"github.com/afaridanquah/verifylab-service/internal/domain/verification"
-	"github.com/afaridanquah/verifylab-service/internal/domain/verification/memory"
-	"github.com/afaridanquah/verifylab-service/internal/params"
+	"bitbucket.org/msafaridanquah/verifylab-service/internal"
+	"bitbucket.org/msafaridanquah/verifylab-service/internal/domain/customer"
+	"bitbucket.org/msafaridanquah/verifylab-service/internal/domain/verification"
+	"bitbucket.org/msafaridanquah/verifylab-service/internal/domain/verification/memory"
+	"bitbucket.org/msafaridanquah/verifylab-service/internal/domain/verification/valueobject"
+	"bitbucket.org/msafaridanquah/verifylab-service/internal/params"
+	ivo "bitbucket.org/msafaridanquah/verifylab-service/internal/valueobject"
 	"github.com/mercari/go-circuitbreaker"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/trace"
 )
 
-type VerificationService struct {
-	verifications verification.Respository
+type Service struct {
+	verifications verification.Repository
+	customers     customer.Repository
 	cb            *circuitbreaker.CircuitBreaker
 }
 
-const otelName = "github.com/afaridanquah/verifylab-service/internal/domain/verification/service"
+const otelName = "bitbucket.org/msafaridanquah/verifylab-service/internal/domain/verification/service"
 
-type VerificationServiceConfig func(*VerificationService) error
+type ServiceConfig func(*Service) error
 
-func New(logger *slog.Logger, cfgs ...VerificationServiceConfig) (*VerificationService, error) {
-	var ser = &VerificationService{}
+func New(logger *slog.Logger, cfgs ...ServiceConfig) (*Service, error) {
+	var ser = &Service{}
 	for _, cfg := range cfgs {
 		err := cfg(ser)
 		if err != nil {
@@ -46,28 +50,65 @@ func New(logger *slog.Logger, cfgs ...VerificationServiceConfig) (*VerificationS
 	return ser, nil
 }
 
-func WithVerficationRepo(vr verification.Respository) VerificationServiceConfig {
-	return func(s *VerificationService) error {
+func WithVerficationRepo(vr verification.Repository) ServiceConfig {
+	return func(s *Service) error {
 		s.verifications = vr
 		return nil
 	}
 }
 
-func WithMemoryVerificationRepository() VerificationServiceConfig {
+func WithMemoryVerificationRepository() ServiceConfig {
 	mr, _ := memory.New()
 
 	return WithVerficationRepo(mr)
 }
 
-func (vs *VerificationService) CreateVerification(ctx context.Context, req params.CreateVerificationRequest) (verification.Verification, error) {
+func (s *Service) CreateVerification(ctx context.Context, req params.CreateVerificationRequest) (verification.Verification, error) {
 	defer newOTELSpan(ctx, "Verification.Create").End()
 
 	err := req.Validate()
-
-	log.Printf("error from validation: %v", err)
-
 	if err != nil {
 		return verification.Verification{}, internal.WrapErrorf(err, internal.ErrorCodeInvalidArgument, "params.Validate")
+	}
+
+	vt, err := valueobject.NewVerificationType(req.VerificationType)
+	if err != nil {
+		return verification.Verification{}, internal.WrapErrorf(err, internal.ErrorCodeInvalidArgument, "params.Validate Verification Type")
+	}
+
+	verID := ivo.NewID("ver")
+
+	if req.CustomerId != "" {
+		parsedCustomerID, err := ivo.ParseID(req.CustomerId)
+
+		if err != nil {
+			return verification.Verification{}, internal.WrapErrorf(err, internal.ErrorCodeInvalidArgument, "params.Customer ID Parsing")
+		}
+
+		cus, err := s.customers.Find(ctx, parsedCustomerID)
+
+		log.Printf("cus %v", cus)
+
+		if err != nil {
+			return verification.Verification{}, internal.WrapErrorf(err, internal.ErrorCodeNotFound, "customer.Find")
+		}
+
+		person, err := valueobject.NewPerson(cus.ID().String(), cus.FirstName(), cus.MiddleName(), cus.Lastname(), cus.DateOfBirth(), cus.Email(), cus.Country())
+		if err != nil {
+			return verification.Verification{}, internal.WrapErrorf(err, internal.ErrorCodeUnknown, "person.Create")
+		}
+
+		ver, err := verification.New(verID, vt, person)
+		if err != nil {
+			return verification.Verification{}, internal.WrapErrorf(err, internal.ErrorCodeUnknown, "verification.Create")
+		}
+
+		err = s.verifications.Add(ctx, *ver)
+		if err != nil {
+			return verification.Verification{}, internal.WrapErrorf(err, internal.ErrorCodeUnknown, "repo.Create")
+		}
+
+		return *ver, nil
 	}
 
 	return verification.Verification{}, nil

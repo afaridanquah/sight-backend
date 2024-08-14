@@ -6,8 +6,8 @@ import (
 	"log"
 	"net/url"
 
-	"github.com/afaridanquah/verifylab-service/internal"
-	"github.com/afaridanquah/verifylab-service/internal/envvar"
+	"bitbucket.org/msafaridanquah/verifylab-service/internal"
+	"bitbucket.org/msafaridanquah/verifylab-service/internal/envvar"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 )

@@ -3,8 +3,8 @@ package document_test
 import (
 	"testing"
 
-	"github.com/afaridanquah/verifylab-service/internal/domain/document"
-	"github.com/afaridanquah/verifylab-service/internal/domain/document/valueobject"
+	"bitbucket.org/msafaridanquah/verifylab-service/internal/domain/document"
+	"bitbucket.org/msafaridanquah/verifylab-service/internal/domain/document/valueobject"
 )
 
 func TestNewDocument(t *testing.T) {

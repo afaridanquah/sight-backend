@@ -2,32 +2,30 @@ package customer
 
 import (
 	"context"
-	"log"
 	"log/slog"
 	"time"
 
-	"github.com/afaridanquah/verifylab-service/internal"
-	"github.com/afaridanquah/verifylab-service/internal/domain/customer"
-	"github.com/afaridanquah/verifylab-service/internal/domain/customer/memory"
-	"github.com/afaridanquah/verifylab-service/internal/domain/customer/valueobject"
-	"github.com/afaridanquah/verifylab-service/internal/params"
-	ivo "github.com/afaridanqverifylab-servicekend/internal/valueobject"
+	"bitbucket.org/msafaridanquah/verifylab-service/internal"
+	"bitbucket.org/msafaridanquah/verifylab-service/internal/domain/customer"
+	"bitbucket.org/msafaridanquah/verifylab-service/internal/domain/customer/memory"
+	"bitbucket.org/msafaridanquah/verifylab-service/internal/params"
+	ivo "bitbucket.org/msafaridanquah/verifylab-service/internal/valueobject"
 	"github.com/mercari/go-circuitbreaker"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/trace"
 )
 
-type CustomerService struct {
+type Service struct {
 	customers customer.Repository
 	cb        *circuitbreaker.CircuitBreaker
 }
 
-const otelName = "github.com/afaridanquah/verifylab-service/internal/domain/customer/service"
+const otelName = "bitbucket.org/msafaridanquah/verifylab-service/internal/domain/customer/service"
 
-type CustomerServiceConfig func(*CustomerService) error
+type ServiceConfig func(*Service) error
 
-func New(logger *slog.Logger, cfgs ...CustomerServiceConfig) (*CustomerService, error) {
-	var ser = &CustomerService{}
+func New(logger *slog.Logger, cfgs ...ServiceConfig) (*Service, error) {
+	var ser = &Service{}
 
 	for _, cfg := range cfgs {
 		err := cfg(ser)
@@ -50,37 +48,34 @@ func New(logger *slog.Logger, cfgs ...CustomerServiceConfig) (*CustomerService, 
 	return ser, nil
 }
 
-func WithRepository(cr customer.Repository) CustomerServiceConfig {
-	return func(cs *CustomerService) error {
+func WithRepository(cr customer.Repository) ServiceConfig {
+	return func(cs *Service) error {
 		cs.customers = cr
 		return nil
 	}
 }
 
-func WithMemoryRepository() CustomerServiceConfig {
+func WithMemoryRepository() ServiceConfig {
 	mr := memory.New()
 
 	return WithRepository(mr)
 }
 
-func (cs *CustomerService) CreateCustomer(ctx context.Context, req params.CreateCustomerRequest) (customer.Customer, error) {
+func (cs *Service) CreateCustomer(ctx context.Context, req params.CreateCustomerRequest) (customer.Customer, error) {
 	defer newOTELSpan(ctx, "Customer.Create").End()
 
 	err := req.Validate()
-
-	log.Printf("error from validation: %v", err)
-
 	if err != nil {
 		return customer.Customer{}, internal.WrapErrorf(err, internal.ErrorCodeInvalidArgument, "params.Validate")
 	}
+
 	country, err := ivo.NewCountry(req.Country)
 	if err != nil {
 		return customer.Customer{}, internal.WrapErrorf(err, internal.ErrorCodeInvalidArgument, "params.Validate")
 	}
 
-	id := valueobject.NewID()
+	id := ivo.NewID("cus")
 	cus, err := customer.New(id, req.FirstName, req.LastName, country)
-
 	if err != nil {
 		return customer.Customer{}, internal.WrapErrorf(err, internal.ErrorCodeInvalidArgument, "params.Validate")
 	}
@@ -102,17 +97,17 @@ func (cs *CustomerService) CreateCustomer(ctx context.Context, req params.Create
 	}
 
 	err = cs.customers.Add(ctx, *cus)
-
 	if err != nil {
 		return customer.Customer{}, internal.WrapErrorf(err, internal.ErrorCodeUnknown, "repo.Create")
 	}
+
 	return *cus, err
 }
 
-func (cs *CustomerService) FindCustomer(ctx context.Context, id string) (customer.Customer, error) {
+func (cs *Service) FindCustomer(ctx context.Context, id string) (customer.Customer, error) {
 	defer newOTELSpan(ctx, "Customer.Find").End()
 
-	custID, err := valueobject.ParseID(id)
+	custID, err := ivo.ParseID(id)
 	if err != nil {
 		return customer.Customer{}, internal.WrapErrorf(err, internal.ErrorCodeUnknown, "Find")
 	}

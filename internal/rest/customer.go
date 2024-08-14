@@ -4,14 +4,14 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"github.com/afaridanquah/verifylab-service/internal"
-	"github.com/afaridanquah/verifylab-service/internal/params"
-	"github.com/afaridanquah/verifylab-service/internal/service/customer"
+	"bitbucket.org/msafaridanquah/verifylab-service/internal"
+	"bitbucket.org/msafaridanquah/verifylab-service/internal/params"
+	"bitbucket.org/msafaridanquah/verifylab-service/internal/service/customer"
 	"github.com/go-chi/chi/v5"
 )
 
 type CustomerHandler struct {
-	svc customer.CustomerService
+	svc customer.Service
 }
 
 type FindCustomerResponse struct {
@@ -33,7 +33,7 @@ func (ch *CustomerHandler) Register(r chi.Router) {
 	r.Get("/customers/{id}", ch.find)
 }
 
-func NewCustomerhandler(svc customer.CustomerService) *CustomerHandler {
+func NewCustomerhandler(svc customer.Service) *CustomerHandler {
 	return &CustomerHandler{
 		svc: svc,
 	}

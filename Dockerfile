@@ -9,17 +9,17 @@ WORKDIR /build/
 COPY . .
 
 RUN go mod download
-RUN go build -o verifylab cmd/
+RUN go build -o verifylab-service ./cmd
 
 FROM scratch
 WORKDIR /api/
 ENV PATH=/api/bin/:$PATH
 
 
-COPY --from=builder /build/verifylab ./bin/verifylab
+COPY --from=builder /build/verifylab-service ./bin/verifylab-service
 COPY --from=builder /build/env.example .
 
 EXPOSE 9235
 
 
-CMD [ "/api/verifylab", "-env", "/api/env.example" ]
+CMD [ "/api/verifylab-service", "-env", "/api/env.example" ]

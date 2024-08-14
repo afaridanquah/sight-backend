@@ -3,8 +3,8 @@ package internal
 import (
 	"os"
 
-	"github.com/afaridanquah/verifylab-service/internal"
-	"github.com/afaridanquah/verifylab-service/internal/envvar/vault"
+	"bitbucket.org/msafaridanquah/verifylab-service/internal"
+	"bitbucket.org/msafaridanquah/verifylab-service/internal/envvar/vault"
 )
 
 // NewVaultProvider instantiates the Vault client using configuration defined in environment variables.

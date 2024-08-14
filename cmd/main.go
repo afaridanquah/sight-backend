@@ -12,12 +12,12 @@ import (
 	"syscall"
 	"time"
 
-	internal "github.com/afaridanquah/verifylab-service/cmd/internal"
-	"github.com/afaridanquah/verifylab-serviceb-service/envvar"
-	"github.com/afaridanquah/verifylab-serviceb-service/rest"
-	"github.com/afaridanquah/verifylab-serviceb-service/service/customer"
-	"github.com/afaridanquah/verifylab-serviverifylab-servicece/verification"
-	internaldomain "github.com/afaridaverifylab-serviceackend/internal"
+	"bitbucket.org/msafaridanquah/verifylab-service/cmd/internal"
+	internaldomain "bitbucket.org/msafaridanquah/verifylab-service/internal"
+	"bitbucket.org/msafaridanquah/verifylab-service/internal/envvar"
+	"bitbucket.org/msafaridanquah/verifylab-service/internal/rest"
+	"bitbucket.org/msafaridanquah/verifylab-service/internal/service/customer"
+	"bitbucket.org/msafaridanquah/verifylab-service/internal/service/verification"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/render"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
@@ -29,7 +29,7 @@ func main() {
 	var env, address string
 
 	flag.StringVar(&env, "env", "", "Environment Variables filename")
-	flag.StringVar(&address, "address", ":9234", "HTTP Server Address")
+	flag.StringVar(&address, "address", ":9235", "HTTP Server Address")
 	flag.Parse()
 
 	errC, err := run(env, address)

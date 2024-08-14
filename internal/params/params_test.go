@@ -4,7 +4,7 @@ import (
 	"errors"
 	"testing"
 
-	"github.com/afaridanquah/verifylab-service/internal/params"
+	"bitbucket.org/msafaridanquah/verifylab-service/internal/params"
 	validation "github.com/go-ozzo/ozzo-validation/v4"
 )
 

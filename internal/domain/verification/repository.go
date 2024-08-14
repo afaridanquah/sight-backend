@@ -4,7 +4,7 @@ import (
 	"context"
 	"errors"
 
-	"github.com/afaridanquah/verifylab-service/internal/domain/verification/valueobject"
+	"bitbucket.org/msafaridanquah/verifylab-service/internal/domain/verification/valueobject"
 )
 
 var (
@@ -12,7 +12,7 @@ var (
 	ErrVerificationCannotFound   = errors.New("cannot be found in repo")
 )
 
-type Respository interface {
+type Repository interface {
 	Add(ctx context.Context, v Verification) error
 	Find(ctx context.Context, id valueobject.ID) (Verification, error)
 }

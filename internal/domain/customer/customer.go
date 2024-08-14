@@ -3,8 +3,7 @@ package customer
 import (
 	"errors"
 
-	"github.com/afaridanquah/verifylab-service/internal/domain/customer/valueobject"
-	vo "github.com/afaridanquverifylab-serviceend/internal/valueobject"
+	vo "bitbucket.org/msafaridanquah/verifylab-service/internal/valueobject"
 )
 
 var (
@@ -13,7 +12,7 @@ var (
 )
 
 type Customer struct {
-	id          valueobject.ID
+	id          vo.ID
 	firstName   string
 	middleName  string
 	lastName    string
@@ -24,8 +23,8 @@ type Customer struct {
 
 type CustomerOption func(*Customer)
 
-func New(id valueobject.ID, fn string, ln string, c vo.Country, opts ...CustomerOption) (*Customer, error) {
-	if id == (valueobject.ID{}) {
+func New(id vo.ID, fn string, ln string, c vo.Country, opts ...CustomerOption) (*Customer, error) {
+	if id == (vo.ID{}) {
 		return &Customer{}, ErrInvalidPerson
 	}
 
@@ -59,7 +58,7 @@ func (c *Customer) WithEmail(e vo.Email) CustomerOption {
 	}
 }
 
-func (c Customer) ID() valueobject.ID {
+func (c Customer) ID() vo.ID {
 	return c.id
 }
 

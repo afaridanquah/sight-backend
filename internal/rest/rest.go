@@ -5,7 +5,7 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/afaridanquah/verifylab-service/internal"
+	"bitbucket.org/msafaridanquah/verifylab-service/internal"
 	"github.com/go-chi/render"
 	validation "github.com/go-ozzo/ozzo-validation/v4"
 	"go.opentelemetry.io/otel"
@@ -40,8 +40,6 @@ func renderErrorResponse(w http.ResponseWriter, r *http.Request, msg string, err
 				log.Printf("ierr %v", verrors)
 				resp.Validations = verrors
 			}
-			log.Printf("ierr %v", verrors)
-
 		case internal.ErrorCodeUnknown:
 			fallthrough
 		default:

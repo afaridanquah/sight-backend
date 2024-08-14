@@ -3,7 +3,7 @@ package valueobject
 import (
 	"errors"
 
-	vo "github.com/afaridanquah/verifylab-service/internal/valueobject"
+	vo "bitbucket.org/msafaridanquah/verifylab-service/internal/valueobject"
 )
 
 type Person struct {

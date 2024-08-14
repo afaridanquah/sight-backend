@@ -1,4 +1,4 @@
-module github.com/afaridanquah/verifylab-service
+module bitbucket.org/msafaridanquah/verifylab-service
 
 go 1.22
 

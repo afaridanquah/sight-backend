@@ -4,17 +4,17 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"github.com/afaridanquah/verifylab-service/internal"
-	"github.com/afaridanquah/verifylab-service/internal/params"
-	"github.com/afaridanquah/verifylab-service/internal/service/verification"
+	"bitbucket.org/msafaridanquah/verifylab-service/internal"
+	"bitbucket.org/msafaridanquah/verifylab-service/internal/params"
+	"bitbucket.org/msafaridanquah/verifylab-service/internal/service/verification"
 	"github.com/go-chi/chi/v5"
 )
 
 type VerificationHandler struct {
-	vs verification.VerificationService
+	vs verification.Service
 }
 
-func NewVerificationHandler(svc verification.VerificationService) *VerificationHandler {
+func NewVerificationHandler(svc verification.Service) *VerificationHandler {
 	return &VerificationHandler{
 		vs: svc,
 	}
@@ -37,7 +37,6 @@ type GetVerificationResponse struct {
 
 func (vh *VerificationHandler) Register(r chi.Router) {
 	r.Post("/verifications", vh.create)
-	// r.Get("/customers/{id}", ch.find)
 }
 
 func (vh *VerificationHandler) create(w http.ResponseWriter, r *http.Request) {
@@ -59,7 +58,4 @@ func (vh *VerificationHandler) create(w http.ResponseWriter, r *http.Request) {
 	}
 
 	renderResponse(w, r, ver.ID().String(), http.StatusCreated)
-
-	// cus, err := ch.svc.CreateCustomer(r.Context(), customerReq)
-
 }
