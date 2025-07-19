@@ -8,6 +8,8 @@ import (
 	"bitbucket.org/msafaridanquah/verifylab-service/foundation/ierr"
 	"bitbucket.org/msafaridanquah/verifylab-service/foundation/logger"
 	"bitbucket.org/msafaridanquah/verifylab-service/foundation/web"
+	"github.com/go-chi/chi/v5"
+	"github.com/google/uuid"
 )
 
 type App struct {
@@ -38,7 +40,8 @@ func (a *App) create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	newbus, err := toBusinessNewCustomer(napp)
+	newbus, err := toBusNewCustomer(napp)
+	a.log.Info(r.Context(), "customerapp.toBusNewCustomer", newbus)
 	if err != nil {
 		a.log.Error(r.Context(), "customerapp.toBusNewCustomer", err)
 		web.RenderErrorResponse(w, r, err.Error(), err)
@@ -53,26 +56,20 @@ func (a *App) create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	appBalance := toAppCustomer(bcus)
-	web.RenderResponse(w, r, appBalance, http.StatusCreated)
+	appCustomer := toAppCustomer(bcus)
+	web.RenderResponse(w, r, appCustomer, http.StatusCreated)
 }
 
-// func (a *App) customer(ctx context.Context, id string) (Customer, error) {
-// 	bcus, err := a.srv.FindByID(ctx, id)
+func (a *App) customer(w http.ResponseWriter, r *http.Request) {
+	id := chi.URLParam(r, "id")
+	parsedCustomerID, err := uuid.Parse(id)
 
-// 	if err != nil {
-// 		return Customer{}, ierr.WrapErrorf(err, ierr.ErrorCodeInvalidArgument, "customerapp.QueryByID")
-// 	}
+	bcus, err := a.srv.QueryByIDAndBusinessID(r.Context(), parsedCustomerID)
+	if err != nil {
+		web.RenderErrorResponse(w, r, err.Error(), err)
+		return
+	}
 
-// 	return toAppCustomer(bcus), nil
-// }
-
-// func (a *App) query(ctx context.Context) ([]Customer, error) {
-// 	results, err := a.srv.All(ctx)
-
-// 	if err != nil {
-// 		return []Customer{}, ierr.WrapErrorf(err, ierr.ErrorCodeInvalidArgument, "customerapp.All")
-// 	}
-
-// 	return toAppCustomers(results), nil
-// }
+	appCustomer := toAppCustomer(bcus)
+	web.RenderResponse(w, r, appCustomer, http.StatusCreated)
+}

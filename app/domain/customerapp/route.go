@@ -18,4 +18,5 @@ func Register(conf Config) {
 	app := newApp(conf.Service, conf.Log)
 
 	conf.Router.Post("/customers", app.create)
+	conf.Router.Get("/customers/{id}", app.customer)
 }

@@ -67,6 +67,63 @@ services:
     networks:
       - verifylab
 
+  index:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.14.3
+    expose:
+      - "9200"
+    ports:
+      - 9200:9200
+    container_name: index
+    environment:
+      - node.name=index
+      - cluster.name=opensanctions-index
+      - discovery.type=single-node
+      - bootstrap.memory_lock=true
+      - xpack.security.enabled=false
+      - "ES_JAVA_OPTS=-Xms2g -Xmx2g"
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    volumes:
+      - index-os-data:/usr/share/elasticsearch/data
+    deploy:
+      placement:
+        max_replicas_per_node: 1
+      restart_policy:
+        condition: on-failure
+    networks:
+      - verifylab
+
+  app:
+    image: ghcr.io/opensanctions/yente:4.4.0
+    depends_on:
+      - index
+    ports:
+      - 8000:8000
+    environment:
+      YENTE_INDEX_TYPE: "elasticsearch"
+      YENTE_INDEX_URL: http://index:9200
+      # Set this to a randomly generated string to enable the /updatez API:
+      YENTE_UPDATE_TOKEN: ""
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/healthz"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 3s
+    deploy:
+      mode: replicated
+      # Run multiple instances for better scale:
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+        delay: 10s
+        max_attempts: 3
+        window: 120s
+    networks:
+      - verifylab
+
   prometheus:
     image: prom/prometheus
     ports:
@@ -77,3 +134,6 @@ services:
 networks:
   verifylab:
     driver: bridge
+
+volumes:
+  index-os-data: null

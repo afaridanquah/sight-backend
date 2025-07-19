@@ -19,21 +19,23 @@ type Customer struct {
 	UserID          uuid.UUID
 	BusinessID      uuid.UUID
 	DateOfBirth     valueobject.DateOfBirth
+	CityOfBirth     string
 	Identifications []valueobject.Identification
 	Email           valueobject.Email
+	PhoneNumber     valueobject.Phone
 	BirthCountry    valueobject.Country
 	Address         valueobject.Address
 	CreatedAt       time.Time
 	UpdatedAt       time.Time
-	Version         uint64
-	Changes         []Event
 }
 
 type NewCustomer struct {
 	Person          valueobject.Person
 	BirthCountry    valueobject.Country
+	CityOfBirth     string
 	DateOfBirth     valueobject.DateOfBirth
 	Email           valueobject.Email
+	PhoneNumber     valueobject.Phone
 	Address         valueobject.Address
 	Identifications []valueobject.Identification
 }
@@ -45,37 +47,4 @@ type UpdateCustomer struct {
 	Email           valueobject.Email
 	Addresses       valueobject.Address
 	Identifications []valueobject.Identification
-}
-
-func NewFromEvents(events []Event) *Customer {
-	var customer = &Customer{}
-
-	for _, event := range events {
-		customer.On(event, false)
-	}
-}
-
-func (customer *Customer) On(event Event, new bool) {
-	// switch e := event.(type) {
-	// case *PatientAdmitted:
-	// 	p.id = e.ID
-	// 	p.age = e.Age
-	// 	p.ward = e.Ward
-
-	// case *PatientDischarged:
-	// 	p.discharged = true
-
-	// case *PatientTransferred:
-	// 	p.ward = e.NewWardNumber
-
-	// }
-
-	// if !new {
-	// 	p.version++
-	// }
-}
-
-func (customer *Customer) raise(event Event) {
-	customer.Changes = append(customer.Changes, event)
-	customer.On(event, true)
 }

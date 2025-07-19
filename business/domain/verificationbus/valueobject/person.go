@@ -6,6 +6,7 @@ type Person struct {
 	FirstName  string
 	LastName   string
 	MiddleName string
+	OtherNames string
 }
 
 var (
@@ -13,7 +14,7 @@ var (
 	ErrPersonLastNameCannotBeEmpty  = fmt.Errorf("person: last name cannot be empty")
 )
 
-func NewPerson(fn string, ln string, mn *string) (Person, error) {
+func NewPerson(fn string, ln string, mn *string, on *string) (Person, error) {
 	if fn == "" {
 		return Person{}, ErrPersonFirstNameCannotBeEmpty
 	}
@@ -30,5 +31,13 @@ func NewPerson(fn string, ln string, mn *string) (Person, error) {
 		person.MiddleName = *mn
 	}
 
+	if on != nil {
+		person.MiddleName = *on
+	}
+
 	return person, nil
+}
+
+func (p Person) FullName() string {
+	return fmt.Sprintf("%s %s %s", p.FirstName, p.MiddleName, p.LastName)
 }

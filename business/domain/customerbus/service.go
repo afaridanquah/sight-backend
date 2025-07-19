@@ -58,7 +58,7 @@ func (cs *Service) Create(ctx context.Context, nc NewCustomer) (Customer, error)
 	now := time.Now()
 
 	userID := uuid.New()
-	businessID := uuid.New()
+	businessID := uuid.MustParse("6fe9cace-7c71-4e4b-b943-dd2f5bb21693")
 
 	customer := Customer{
 		ID:              uuid.New(),
@@ -67,6 +67,7 @@ func (cs *Service) Create(ctx context.Context, nc NewCustomer) (Customer, error)
 		BusinessID:      businessID,
 		DateOfBirth:     nc.DateOfBirth,
 		Email:           nc.Email,
+		PhoneNumber:     nc.PhoneNumber,
 		BirthCountry:    nc.BirthCountry,
 		Address:         nc.Address,
 		Identifications: nc.Identifications,
@@ -74,40 +75,24 @@ func (cs *Service) Create(ctx context.Context, nc NewCustomer) (Customer, error)
 		UpdatedAt:       now,
 	}
 
-	_, err := cs.customers.Add(ctx, customer)
-
-	if err != nil {
-		return Customer{}, ierr.WrapErrorf(err, ierr.ErrorCodeUnknown, "repo.Create")
+	if err := cs.customers.Add(ctx, customer); err != nil {
+		return Customer{}, ierr.WrapErrorf(err, ierr.ErrorCodeUnknown, "repo.create")
 	}
 
 	return customer, nil
 }
 
-// func (cs *Service) FindByID(ctx context.Context, id string) (customerbus.Customer, error) {
-// 	defer itel.NewOTELSpan(ctx, otelName, "Customer.Find").End()
+func (cs *Service) QueryByIDAndBusinessID(ctx context.Context, custID uuid.UUID) (Customer, error) {
+	ctx, span := otel.AddSpan(ctx, "service.customer.querybyidandbusinessid")
+	defer span.End()
 
-// 	custID, err := uuid.Parse(id)
-// 	if err != nil {
-// 		return customerbus.Customer{}, ierr.WrapErrorf(err, ierr.ErrorCodeUnknown, "Find")
-// 	}
+	//Get businessID from middleware
+	businessID := uuid.MustParse("6fe9cace-7c71-4e4b-b943-dd2f5bb21693")
 
-// 	cus, err := cs.customers.Find(ctx, custID)
+	cus, err := cs.customers.QueryByCustomerAndBusinessID(ctx, custID, businessID)
+	if err != nil {
+		return Customer{}, ierr.WrapErrorf(err, ierr.ErrorCodeUnknown, "repo.querybyidandbusinessid")
+	}
 
-// 	if err != nil {
-// 		return customerbus.Customer{}, ierr.WrapErrorf(err, ierr.ErrorCodeUnknown, "repo.Find")
-// 	}
-
-// 	return cus, nil
-// }
-
-// func (cs *Service) All(ctx context.Context) ([]customerbus.Customer, error) {
-// 	defer itel.NewOTELSpan(ctx, otelName, "Customer.All").End()
-
-// 	results, err := cs.customers.All(ctx)
-
-// 	if err != nil {
-// 		return []customerbus.Customer{}, ierr.WrapErrorf(err, ierr.ErrorCodeUnknown, "repo.All")
-// 	}
-
-// 	return results, nil
-// }
+	return cus, nil
+}

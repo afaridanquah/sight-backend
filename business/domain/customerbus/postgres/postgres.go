@@ -2,10 +2,13 @@ package postgres
 
 import (
 	"context"
+	"time"
 
 	"bitbucket.org/msafaridanquah/verifylab-service/business/domain/customerbus"
+	"bitbucket.org/msafaridanquah/verifylab-service/business/domain/customerbus/valueobject"
 	db "bitbucket.org/msafaridanquah/verifylab-service/business/sdk/postgres/out"
 	"bitbucket.org/msafaridanquah/verifylab-service/foundation/otel"
+	"bitbucket.org/msafaridanquah/verifylab-service/foundation/vaulti"
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -15,30 +18,25 @@ import (
 type Repository struct {
 	queries *db.Queries
 	conn    *pgxpool.Pool
+	vaulti  *vaulti.Vaulty
 }
 
-func New(d db.DBTX, conn *pgxpool.Pool) *Repository {
+func New(d db.DBTX, conn *pgxpool.Pool, vault *vaulti.Vaulty) *Repository {
 	return &Repository{
 		conn:    conn,
 		queries: db.New(d),
+		vaulti:  vault,
 	}
 }
 
-func (r *Repository) Add(ctx context.Context, bus customerbus.Customer) (customerbus.Customer, error) {
-	ctx, span := otel.AddSpan(ctx, "customerbus.postgres.Add")
+func (r *Repository) Add(ctx context.Context, bus customerbus.Customer) error {
+	ctx, span := otel.AddSpan(ctx, "customerbus.postgres.add")
 	span.SetAttributes(semconv.DBSystemPostgreSQL)
 	defer span.End()
 
-	tx, err := r.conn.Begin(ctx)
-	if err != nil {
-		return customerbus.Customer{}, err
-	}
+	dob, _ := time.Parse(time.DateOnly, bus.DateOfBirth.String())
 
-	defer tx.Rollback(ctx)
-
-	qtx := r.queries.WithTx(tx)
-
-	if _, err := qtx.CreateCustomer(ctx, db.CreateCustomerParams{
+	createParams := db.CreateCustomerParams{
 		ID:        bus.ID,
 		FirstName: bus.Person.FirstName,
 		LastName:  bus.Person.LastName,
@@ -46,16 +44,23 @@ func (r *Repository) Add(ctx context.Context, bus customerbus.Customer) (custome
 			String: bus.Person.MiddleName,
 			Valid:  true,
 		},
+		DateOfBirth: pgtype.Date{
+			Time:  dob,
+			Valid: true,
+		},
 		Email: pgtype.Text{
 			String: bus.Email.String(),
 			Valid:  true,
 		},
-		Country: bus.BirthCountry.Alpha2(),
+		BirthCountry: pgtype.Text{
+			String: bus.BirthCountry.Alpha2(),
+			Valid:  true,
+		},
 		BusinessID: uuid.NullUUID{
 			UUID:  bus.BusinessID,
 			Valid: true,
 		},
-		UserID: uuid.NullUUID{
+		CreatorID: uuid.NullUUID{
 			UUID:  bus.UserID,
 			Valid: true,
 		},
@@ -67,38 +72,48 @@ func (r *Repository) Add(ctx context.Context, bus customerbus.Customer) (custome
 			Time:  bus.UpdatedAt,
 			Valid: true,
 		},
-	}); err != nil {
-		return customerbus.Customer{}, err
 	}
+	identificationsJson, err := toDBIdentifications(bus.Identifications, r.vaulti)
+	if err != nil {
+		return err
+	}
+	createParams.Identifications = identificationsJson
 
-	identifications := make([]db.CreateCustomerIdentificationsParams, len(bus.Identifications))
-
-	if len(bus.Identifications) > 0 {
-		for i, idt := range bus.Identifications {
-			identifications[i] = db.CreateCustomerIdentificationsParams{
-				ID: uuid.NullUUID{
-					UUID:  uuid.New(),
-					Valid: true,
-				},
-				CustomerID:         bus.ID,
-				IdentificationType: db.IdentificationType(idt.IdentificationType.String()),
-				IssuedCountry: pgtype.Text{
-					String: idt.CountryIssued.Alpha2(),
-					Valid:  true,
-				},
-				Pin: pgtype.Text{
-					String: idt.Pin,
-					Valid:  true,
-				},
-			}
+	if bus.PhoneNumber != (valueobject.Phone{}) {
+		createParams.PhoneNumber = pgtype.Text{
+			String: bus.PhoneNumber.E164Format,
+			Valid:  true,
 		}
 	}
 
-	if _, err := qtx.CreateCustomerIdentifications(ctx, identifications); err != nil {
+	if err := r.queries.CreateCustomer(ctx, createParams); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (r *Repository) QueryByCustomerAndBusinessID(ctx context.Context, id uuid.UUID, businessID uuid.UUID) (customerbus.Customer, error) {
+	ctx, span := otel.AddSpan(ctx, "customerbus.postgres.querybycustomerandbusinessid")
+	span.SetAttributes(semconv.DBSystemPostgreSQL)
+	defer span.End()
+
+	resp, err := r.queries.QueryCustomerByAndBusinessID(ctx, db.QueryCustomerByAndBusinessIDParams{
+		ID: id,
+		BusinessID: uuid.NullUUID{
+			UUID:  businessID,
+			Valid: true,
+		},
+	})
+
+	if err != nil {
 		return customerbus.Customer{}, err
 	}
 
-	tx.Commit(ctx)
+	customer, err := toBusCustomer(resp, r.vaulti)
+	if err != nil {
+		return customerbus.Customer{}, err
+	}
 
-	return bus, nil
+	return customer, nil
 }

@@ -1,4 +1,4 @@
--- name: CreateIdentification :one
+-- name: InsertIdentification :exec
 INSERT INTO identifications (
     id,
     first_name,

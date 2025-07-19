@@ -2,32 +2,34 @@ package main
 
 import (
 	"context"
-	"errors"
 	"flag"
 	"fmt"
-	"log/slog"
 	"net/http"
 	"os"
 	"os/signal"
+	"runtime"
 	"syscall"
 	"time"
 
 	"bitbucket.org/msafaridanquah/verifylab-service/api/cmd/domain/http/customerapi"
-	"bitbucket.org/msafaridanquah/verifylab-service/api/cmd/domain/http/identificationapi"
-	"bitbucket.org/msafaridanquah/verifylab-service/api/cmd/domain/http/otpapi"
+	"bitbucket.org/msafaridanquah/verifylab-service/api/cmd/domain/http/verificationapi"
 	"bitbucket.org/msafaridanquah/verifylab-service/app/sdk"
 	"bitbucket.org/msafaridanquah/verifylab-service/app/sdk/mid"
 	"bitbucket.org/msafaridanquah/verifylab-service/foundation/envvar"
-	"bitbucket.org/msafaridanquah/verifylab-service/foundation/ierr"
 	"bitbucket.org/msafaridanquah/verifylab-service/foundation/logger"
 	"bitbucket.org/msafaridanquah/verifylab-service/foundation/otel"
+	"bitbucket.org/msafaridanquah/verifylab-service/foundation/vaulti"
 	"bitbucket.org/msafaridanquah/verifylab-service/foundation/web"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/render"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
+	"github.com/riandyrn/otelchi"
 )
 
+const serviceName = "SIGHT"
+
 func main() {
+	var log *logger.Logger
 	var env, address string
 
 	flag.StringVar(&env, "env", "env.example", "Environment Variables filename")
@@ -40,38 +42,35 @@ func main() {
 		return otel.GetTraceID(ctx)
 	}
 
-	log := logger.New(os.Stdout, logger.LevelInfo, "verifylab", traceIDFn)
+	log = logger.New(os.Stdout, logger.LevelInfo, serviceName, traceIDFn)
 
-	log.Info(ctx, "server starting on port", "address", address)
+	// -------------------------------------------------------------------------
 
-	errC, err := run(env, address, ctx, log)
-	if err != nil {
-		fmt.Printf("err: %v", err)
+	if err := run(ctx, env, address, log); err != nil {
+		log.Error(ctx, "startup", "err", err)
 		os.Exit(1)
-	}
-
-	if err := <-errC; err != nil {
-		fmt.Printf("Error while running: %s", err)
 	}
 }
 
-func run(env, address string, ctx context.Context, log *logger.Logger) (<-chan error, error) {
-	if err := envvar.Load(env); err != nil {
+func run(ctx context.Context, env string, address string, log *logger.Logger) error {
+	service := serviceName
 
-		return nil, fmt.Errorf("load envvar %w", err)
+	// -------------------------------------------------------------------------
+	// GOMAXPROCS
+	log.Info(ctx, "startup", "GOMAXPROCS", runtime.GOMAXPROCS(0))
+	log.Info(ctx, "starting service")
+	defer log.Info(ctx, "shutdown complete")
+
+	if err := envvar.Load(env); err != nil {
+		return fmt.Errorf("load envvar %w", err)
 	}
 
 	vault, err := sdk.NewVaultProvider()
 	if err != nil {
-		return nil, fmt.Errorf("new vault provider %w", err)
+		return fmt.Errorf("new vault provider %w", err)
 	}
 
 	conf := envvar.New(vault)
-
-	pool, err := sdk.NewPostgreSQL(conf)
-	if err != nil {
-		return nil, fmt.Errorf("new postgres sql %w", err)
-	}
 
 	var tempo otel.Config
 
@@ -79,7 +78,7 @@ func run(env, address string, ctx context.Context, log *logger.Logger) (<-chan e
 
 	tempo = otel.Config{
 		Host:        jaegerEndpoint,
-		ServiceName: "verifylab",
+		ServiceName: service,
 		Probability: 0.05,
 		ExcludedRoutes: map[string]struct{}{
 			"/v1/liveness":  {},
@@ -87,77 +86,44 @@ func run(env, address string, ctx context.Context, log *logger.Logger) (<-chan e
 		},
 	}
 
-	traceProvider, _, err := otel.InitTracing(log, tempo)
-	tracer := traceProvider.Tracer(tempo.ServiceName)
-
+	traceProvider, teardown, err := otel.InitTracing(log, tempo)
 	if err != nil {
-		return nil, ierr.WrapErrorf(err, ierr.ErrorCodeUnknown, "sdk.NewOTExporter")
+		return fmt.Errorf("init tracing: %w", err)
 	}
 
-	// defer teardown(context.Background())
+	defer teardown(ctx)
+	tracer := traceProvider.Tracer(tempo.ServiceName)
 
-	srv, err := newServer(web.Config{
-		Name:        tempo.ServiceName,
+	pool, err := sdk.NewPostgreSQL(conf)
+	if err != nil {
+		return fmt.Errorf("new postgres sql %w", err)
+	}
+
+	// -------------------------------------------------------------------------
+	// Configuration
+	cfg := web.Config{
+		Name:        "",
 		Address:     ":" + address,
 		Metrics:     promhttp.Handler(),
 		Middlewares: []func(next http.Handler) http.Handler{mid.Otel(tracer), mid.Logger(log)},
 		Logger:      log,
 		PostgresDB:  pool,
 		Tracer:      tracer,
-	})
-
-	fmt.Printf("Server starting on port: %v", address)
-
-	if err != nil {
-		return nil, ierr.WrapErrorf(err, ierr.ErrorCodeUnknown, "newServer")
 	}
 
-	errC := make(chan error, 1)
+	// -------------------------------------------------------------------------
+	// Start API Service
 
-	ctx, stop := signal.NotifyContext(context.Background(),
-		os.Interrupt,
-		syscall.SIGTERM,
-		syscall.SIGQUIT)
+	log.Info(ctx, "startup", "status", "initializing V1 API support")
 
-	go func() {
-		<-ctx.Done()
+	shutdown := make(chan os.Signal, 1)
+	signal.Notify(shutdown, syscall.SIGINT, syscall.SIGTERM)
 
-		log.Info(ctx, "Shutdown signal received")
-
-		ctxTimeout, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-
-		defer func() {
-			stop()
-			cancel()
-			close(errC)
-		}()
-
-		srv.SetKeepAlivesEnabled(false)
-
-		if err := srv.Shutdown(ctxTimeout); err != nil {
-			errC <- err
-		}
-
-		log.Info(ctx, "Shutdown completed")
-	}()
-
-	go func() {
-		log.Info(ctx, "Listening and serving", slog.String("address", address))
-
-		if err := srv.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
-			errC <- err
-		}
-	}()
-
-	return errC, nil
-
-}
-
-func newServer(conf web.Config) (*http.Server, error) {
 	router := chi.NewRouter()
 	router.Use(render.SetContentType(render.ContentTypeJSON))
+	router.Use(otelchi.Middleware(tempo.ServiceName, otelchi.WithChiRoutes(router)))
 
-	for _, mw := range conf.Middlewares {
+	for _, mw := range cfg.Middlewares {
 		router.Use(mw)
 	}
 
@@ -167,19 +133,73 @@ func newServer(conf web.Config) (*http.Server, error) {
 		w.Write([]byte("welcome"))
 	})
 
-	customerapi.Routes(conf.Logger, conf.PostgresDB, v1Router)
-	identificationapi.Routes(conf.Logger, conf.PostgresDB, v1Router)
-	otpapi.Routes(conf.Logger, conf.PostgresDB, v1Router)
+	vaulti, err := vaulti.InitVault(vaulti.Config{
+		KeyName: "pii_key",
+		Log:     cfg.Logger,
+	})
+
+	if err != nil {
+		return err
+	}
+
+	// data, err := vaulti.TransitEncrypt("plaintext string")
+	// if err != nil {
+	// 	return err
+	// }
+
+	// log.Info(ctx, "data from vaulti", data)
+
+	// d, err := vaulti.TransitDecrypt("vault:v1:b2mLrmK+CTtYc+WIv4WyXZE7yyzHBQiofHrdG2Y4q1deNkjn4dqCIh4367A=")
+	// if err != nil {
+	// 	return err
+	// }
+
+	// log.Info(ctx, "data from vaulti", d)
+
+	// tenantapi.Routes(cfg.Logger, cfg.PostgresDB, v1Router)
+	// userapi.Routes(cfg.Logger, cfg.PostgresDB, v1Router)
+
+	customerapi.Routes(cfg.Logger, cfg.PostgresDB, conf, vaulti, v1Router)
+	verificationapi.Routes(cfg.Logger, cfg.PostgresDB, conf, vaulti, v1Router)
 
 	router.Mount("/v1", v1Router)
-	router.Handle("/metrics", conf.Metrics)
 
-	return &http.Server{
+	api := http.Server{
 		Handler:           router,
-		Addr:              conf.Address,
+		Addr:              cfg.Address,
 		ReadTimeout:       1 * time.Second,
 		ReadHeaderTimeout: 1 * time.Second,
 		WriteTimeout:      1 * time.Second,
 		IdleTimeout:       1 * time.Second,
-	}, nil
+	}
+
+	serverErrors := make(chan error, 1)
+
+	go func() {
+		log.Info(ctx, "startup", "status", "api router started", "host", api.Addr)
+		serverErrors <- api.ListenAndServe()
+	}()
+
+	// -------------------------------------------------------------------------
+	// Shutdown
+
+	select {
+	case err := <-serverErrors:
+		return fmt.Errorf("server error: %w", err)
+
+	case sig := <-shutdown:
+		log.Info(ctx, "shutdown", "status", "shutdown started", "signal", sig)
+		defer log.Info(ctx, "shutdown", "status", "shutdown complete", "signal", sig)
+
+		ctx, cancel := context.WithTimeout(ctx, 20*time.Second)
+		defer cancel()
+
+		if err := api.Shutdown(ctx); err != nil {
+			api.Close()
+			return fmt.Errorf("could not stop server gracefully: %w", err)
+		}
+	}
+
+	return nil
+
 }

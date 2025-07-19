@@ -34,3 +34,7 @@ func ParseIdentificationType(s string) (IdentificationType, error) {
 		return IdentificationType{}, fmt.Errorf("%s : is not valid", s)
 	}
 }
+
+func (idt *IdentificationType) String() string {
+	return idt.a
+}

@@ -14,12 +14,14 @@ var (
 )
 
 var (
-	CLEARED        = Status{"CLEARED"}
-	ACTIONREQUIRED = Status{"ACTION_REQUIRED"}
-	FAILED         = Status{"FAILED"}
+	STATUSCLEARED        = Status{"CLEARED"}
+	STATUSACTIONREQUIRED = Status{"ACTION_REQUIRED"}
+	FAILED               = Status{"FAILED"}
+	STARTED              = Status{"STARTED"}
+	COMPLETED            = Status{"COMPLETED"}
 )
 
-var Statuses = []Status{CLEARED, ACTIONREQUIRED}
+var Statuses = []Status{STATUSCLEARED, STATUSACTIONREQUIRED}
 
 func ParseStatus(name string) (Status, error) {
 	if name == "" {
@@ -28,11 +30,15 @@ func ParseStatus(name string) (Status, error) {
 	name = strings.ToUpper(name)
 	switch name {
 	case "CLEARED":
-		return CLEARED, nil
+		return STATUSCLEARED, nil
 	case "ACTION_REQUIRED":
-		return ACTIONREQUIRED, nil
+		return STATUSACTIONREQUIRED, nil
 	case "FAILED":
 		return FAILED, nil
+	case "STARTED":
+		return STARTED, nil
+	case "COMPLETED":
+		return COMPLETED, nil
 	default:
 		return Status{}, errors.New("status name : invalid name")
 	}

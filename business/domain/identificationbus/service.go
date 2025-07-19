@@ -6,21 +6,19 @@ import (
 	"time"
 
 	"bitbucket.org/msafaridanquah/verifylab-service/foundation/logger"
-	"bitbucket.org/msafaridanquah/verifylab-service/foundation/otel"
-	"github.com/google/uuid"
 	"github.com/mercari/go-circuitbreaker"
 )
 
 type Service struct {
-	identifications Repository
-	cb              *circuitbreaker.CircuitBreaker
+	repo Repository
+	log  *logger.Logger
+	cb   *circuitbreaker.CircuitBreaker
 }
-
 type ServiceConfig func(*Service) error
 
-func New(identifications Repository, logger *logger.Logger, cfgs ...ServiceConfig) (*Service, error) {
+func New(repo Repository, logger *logger.Logger, cfgs ...ServiceConfig) (*Service, error) {
 	var ser = &Service{
-		identifications: identifications,
+		repo: repo,
 	}
 
 	for _, cfg := range cfgs {
@@ -44,21 +42,6 @@ func New(identifications Repository, logger *logger.Logger, cfgs ...ServiceConfi
 	return ser, nil
 }
 
-func (ser *Service) Create(ctx context.Context, nbus NewIdentification) (Identification, error) {
-	ctx, span := otel.AddSpan(ctx, "identificationbus.service.Create")
-	defer span.End()
-
-	now := time.Now()
-	bus := Identification{
-		ID:                 uuid.New(),
-		Number:             nbus.Number,
-		PlaceOfBirth:       nbus.PlaceOfBirth,
-		DateOfBirth:        nbus.DateOfBirth,
-		IdentificationType: nbus.IdentificationType,
-		IssuedCountry:      nbus.IssuedCountry,
-		CreatedAt:          now,
-		UpdatedAt:          now,
-	}
-
-	return bus, nil
+func (srv *Service) Create(ctx context.Context, ni NewIdentification) (Identification, error) {
+	// ctx, span := otel.AddSpan(ctx, "id")
 }

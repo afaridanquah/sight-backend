@@ -74,5 +74,5 @@ func NewEmail(email string) (Email, error) {
 }
 
 func (e Email) String() string {
-	return string(e)
+	return strings.ToLower(string(e))
 }

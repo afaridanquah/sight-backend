@@ -3,41 +3,81 @@ package valueobject
 import (
 	"fmt"
 	"strings"
+	"time"
 )
 
 type Identification struct {
 	IdentificationType IdentificationType
 	Pin                string
-	CountryIssued      Country
+	Nationality        *Country
+	ExpDate            *time.Time
+	IssuedDate         time.Time
+	IssedCountry       Country
 }
 
-func NewIdentification(idt, pin, c string) (Identification, error) {
+func NewIdentification(idt string, pin string, issuedCountry string, issuedDate *string, nationality *string, expDate *string) (Identification, error) {
 	if idt == "" {
-		return Identification{}, fmt.Errorf("new identification %q", idt)
+		return Identification{}, fmt.Errorf("identification type %q", idt)
 	}
 	if pin == "" {
-		return Identification{}, fmt.Errorf("new identification %q", pin)
+		return Identification{}, fmt.Errorf("pin %q", pin)
 	}
 
-	if c == "" {
-		return Identification{}, fmt.Errorf("new identification %q", c)
+	if issuedCountry == "" {
+		return Identification{}, fmt.Errorf("issued country %q", issuedCountry)
 	}
 
 	idtype, err := ParseIdentificationType(idt)
 	if err != nil {
-		return Identification{}, fmt.Errorf("new identification %q:%w", idt, err)
+		return Identification{}, fmt.Errorf("parse identification type %q:%w", idt, err)
 	}
 
-	country, err := NewCountry(c)
+	parsedIssuedCountry, err := NewCountry(issuedCountry)
 	if err != nil {
-		return Identification{}, fmt.Errorf("new identification %q:%w", c, err)
+		return Identification{}, fmt.Errorf("parse country code %q:%w", issuedCountry, err)
 	}
 
-	return Identification{
+	identification := Identification{
 		IdentificationType: idtype,
-		CountryIssued:      country,
+		IssedCountry:       parsedIssuedCountry,
 		Pin:                pin,
-	}, nil
+	}
+
+	if issuedDate != nil {
+		toIssuedDate, err := time.Parse(time.DateOnly, *issuedDate)
+		if err != nil {
+			return Identification{}, fmt.Errorf("parse issued date:%s, %w", *issuedDate, err)
+		}
+
+		identification.IssuedDate = toIssuedDate
+	}
+
+	if nationality != nil {
+		parsedNationality, err := NewCountry(*nationality)
+		if err != nil {
+			return Identification{}, fmt.Errorf("parse issued date:%s, %w", *issuedDate, err)
+		}
+
+		identification.Nationality = &parsedNationality
+	}
+
+	if expDate != nil {
+		toExpDate, err := time.Parse(time.DateOnly, *expDate)
+		if err != nil {
+			return Identification{}, fmt.Errorf("parse exp date %w", err)
+		}
+
+		identification.ExpDate = &toExpDate
+	}
+
+	return identification, nil
+}
+
+func (v *Identification) HasExpired() bool {
+	if v.ExpDate.Before(time.Now()) {
+		return true
+	}
+	return false
 }
 
 // =============================================

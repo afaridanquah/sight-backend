@@ -8,28 +8,36 @@ import (
 )
 
 type Identification struct {
-	ID                 uuid.UUID
-	Number             string
-	PlaceOfBirth       string
-	DateOfBirth        time.Time
-	IdentificationType valueobject.IdentificationType
-	IssuedCountry      valueobject.Country
-	Person             valueobject.Person
-	Address            valueobject.Address
-	IssuedDate         time.Time
-	ExpDate            time.Time
-	CreatedAt          time.Time
-	UpdatedAt          time.Time
+	ID            uuid.UUID
+	FirstName     string
+	LastName      string
+	MiddleName    string
+	Sex           string
+	Pin           string
+	PlaceOfBirth  string
+	DateOfBirth   time.Time
+	Nationality   valueobject.Country
+	IssuedDate    time.Time
+	ExpDate       time.Time
+	StateOrRegion string
+	City          string
+	Country       valueobject.Country
+	CreatedAt     time.Time
+	UpdatedAt     time.Time
 }
 
 type NewIdentification struct {
-	Number             string
-	PlaceOfBirth       string
-	DateOfBirth        time.Time
-	IdentificationType valueobject.IdentificationType
-	Person             valueobject.Person
-	Address            valueobject.Address
-	IssuedCountry      valueobject.Country
-	IssuedDate         time.Time
-	ExpDate            time.Time
+	FirstName     string
+	LastName      string
+	MiddleName    string
+	Sex           string
+	Pin           string
+	PlaceOfBirth  string
+	DateOfBirth   time.Time
+	Nationality   valueobject.Country
+	IssuedDate    time.Time
+	ExpDate       time.Time
+	StateOrRegion string
+	City          string
+	Country       valueobject.Country
 }

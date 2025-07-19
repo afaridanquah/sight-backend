@@ -7,8 +7,11 @@ import (
 )
 
 type Phone struct {
-	Country Country
-	Digits  string
+	Country        Country
+	E164Format     string
+	NationalFormat string
+	Carrier        string
+	PhoneType      string
 }
 
 func ParsePhone(countryCode string, digits string) (Phone, error) {
@@ -30,8 +33,56 @@ func ParsePhone(countryCode string, digits string) (Phone, error) {
 		return Phone{}, err
 	}
 
+	e164 := phonenumbers.Format(num, phonenumbers.E164)
+	national := phonenumbers.Format(num, phonenumbers.NATIONAL)
+	carrier, err := phonenumbers.GetSafeCarrierDisplayNameForNumber(num, "en")
+	if err != nil {
+		fmt.Printf("GetSafeCarrierDisplayNameForNumber: %v", err)
+		return Phone{}, err
+	}
+
 	return Phone{
-		Country: country,
-		Digits:  num.String(),
+		Country:        country,
+		NationalFormat: national,
+		E164Format:     e164,
+		Carrier:        carrier,
 	}, nil
+}
+
+func ParseIntlPhone(digits string) (Phone, error) {
+	if digits == "" {
+		return Phone{}, fmt.Errorf("phone digits is required")
+	}
+
+	num, err := phonenumbers.Parse(digits, "")
+	if err != nil {
+		return Phone{}, err
+	}
+
+	country, err := NewCountry(phonenumbers.GetRegionCodeForCountryCode(int(*num.CountryCode)))
+	if err != nil {
+		return Phone{}, err
+	}
+
+	e164 := phonenumbers.Format(num, phonenumbers.E164)
+	national := phonenumbers.Format(num, phonenumbers.NATIONAL)
+	carrier, err := phonenumbers.GetSafeCarrierDisplayNameForNumber(num, "en")
+	if err != nil {
+		fmt.Printf("GetSafeCarrierDisplayNameForNumber: %v", err)
+		return Phone{}, err
+	}
+
+	return Phone{
+		Country:        country,
+		NationalFormat: national,
+		E164Format:     e164,
+		Carrier:        carrier,
+	}, nil
+}
+
+func (p Phone) IsZero() bool {
+	if p == (Phone{}) {
+		return true
+	}
+	return false
 }

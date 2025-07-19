@@ -11,7 +11,7 @@ type DateOfBirth struct {
 
 var (
 	ErrDateCannotBeEmpty   = errors.New("date cannot be empty")
-	ErrDateNotValidBeEmpty = errors.New("date is invalid be empty")
+	ErrDateNotValidBeEmpty = errors.New("date is invalid")
 )
 
 func NewDateOfBirth(d string) (DateOfBirth, error) {
@@ -30,4 +30,12 @@ func NewDateOfBirth(d string) (DateOfBirth, error) {
 
 func (d DateOfBirth) String() string {
 	return d.date
+}
+
+func ParseDateOfBirth(d time.Time) (DateOfBirth, error) {
+	if d == (time.Time{}) {
+		return DateOfBirth{}, ErrDateNotValidBeEmpty
+	}
+
+	return DateOfBirth{d.Format(time.DateOnly)}, nil
 }

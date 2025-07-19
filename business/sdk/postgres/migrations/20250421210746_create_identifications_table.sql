@@ -9,12 +9,12 @@ CREATE TYPE identification_type AS ENUM (
 );
 
 CREATE TABLE identifications (
-    id UUID NOT NULL,
+    id UUID PRIMARY KEY NOT NULL,
     first_name VARCHAR(45),
     last_name VARCHAR(45),
     middle_name VARCHAR(45),
     other_names VARCHAR(45),
-    pin TEXT NOT NULL,
+    pin VARCHAR(100) NOT NULL,
     identification_type identification_type NOT NULL,
     issued_country VARCHAR(2),
     issued_date DATE,
@@ -23,8 +23,8 @@ CREATE TABLE identifications (
     date_of_birth DATE,
     address_1 TEXT,
     address_2 TEXT,
-    city TEXT,
-    state_region TEXT,
+    city VARCHAR(150),
+    state_region VARCHAR(150),
     zip_code VARCHAR(20),
     created_at TIMESTAMP NOT NULL,
     updated_at TIMESTAMP NOT NULL

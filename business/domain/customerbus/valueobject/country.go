@@ -36,14 +36,14 @@ func NewCountry(c string) (Country, error) {
 	return Country{}, ErrCountryCodeNotValid
 }
 
-func (c Country) String() string {
+func (c *Country) String() string {
 	return c.alphaCode2
 }
 
-func (c Country) Name() string {
+func (c *Country) Name() string {
 	return c.name
 }
 
-func (c Country) Alpha2() string {
+func (c *Country) Alpha2() string {
 	return c.alphaCode2
 }

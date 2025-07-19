@@ -3,6 +3,8 @@ package customerbus
 import (
 	"context"
 	"errors"
+
+	"github.com/google/uuid"
 )
 
 var (
@@ -13,9 +15,6 @@ var (
 )
 
 type Repository interface {
-	// Find(ctx context.Context, id uuid.UUID) (Customer, error)
-	// All(ctx context.Context) ([]Customer, error)
-	Add(ctx context.Context, c Customer) (Customer, error)
-	// Update(ctx context.Context, c Customer) error
-	// Delete(ctx context.Context, id uuid.UUID) error
+	QueryByCustomerAndBusinessID(ctx context.Context, id uuid.UUID, businessID uuid.UUID) (Customer, error)
+	Add(ctx context.Context, c Customer) error
 }

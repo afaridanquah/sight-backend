@@ -96,7 +96,3 @@ func (p *Provider) Get(v string) (string, error) {
 
 	return val, nil
 }
-
-// func (p *Provider) Transit(v any) (string, error) {
-// 	// p.client.
-// }
