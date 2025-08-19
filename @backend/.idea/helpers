@@ -1,0 +1,7 @@
+GOOSE_DRIVER=postgres GOOSE_DBSTRING="user=postgres dbname=sight sslmode=disable"
+
+cd business/sdk/postgres/migrations
+GOOSE_DRIVER=postgres GOOSE_DBSTRING="postgres://postgres:postgres@localhost:5432/sight" goose status
+
+cd business/sdk/postgres
+sqlc generate
