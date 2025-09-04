@@ -17,5 +17,9 @@ type Config struct {
 func Register(conf Config) {
 	app := newApp(conf.Service, conf.Log)
 
+	conf.Router.Get("/businesses/{id}", app.findByID)
+	conf.Router.Put("/businesses/{id}", app.update)
 	conf.Router.Post("/businesses", app.create)
+	conf.Router.Post("/businesses/{id}/documents", app.upload)
+
 }

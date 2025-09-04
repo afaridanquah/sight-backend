@@ -96,7 +96,7 @@ func run(ctx context.Context, env string, address string, log *logger.Logger) er
 	defer teardown(ctx)
 	tracer := traceProvider.Tracer(tempo.ServiceName)
 
-	pool, err := sdk.NewPostgreSQL(conf)
+	pool, err := sdk.NewPostgreSQL(ctx, conf)
 	if err != nil {
 		return fmt.Errorf("new postgres sql %w", err)
 	}

@@ -5,6 +5,8 @@ import (
 	"log/slog"
 	"time"
 
+	"bitbucket.org/msafaridanquah/verifylab-service/business/sdk/aws"
+	"bitbucket.org/msafaridanquah/verifylab-service/foundation/envvar"
 	"bitbucket.org/msafaridanquah/verifylab-service/foundation/logger"
 	"bitbucket.org/msafaridanquah/verifylab-service/foundation/otel"
 	"github.com/google/uuid"
@@ -12,9 +14,10 @@ import (
 )
 
 type Service struct {
-	repo Repository
-	log  *logger.Logger
-	cb   *circuitbreaker.CircuitBreaker
+	repo   Repository
+	log    *logger.Logger
+	cb     *circuitbreaker.CircuitBreaker
+	envvar *envvar.Configuration
 }
 
 type ServiceConfig func(*Service) error
@@ -52,16 +55,45 @@ func WithRepository(repo Repository) ServiceConfig {
 	}
 }
 
+func WithEnv(envvar *envvar.Configuration) ServiceConfig {
+	return func(s *Service) error {
+		s.envvar = envvar
+		return nil
+	}
+}
+
 func (srv *Service) Create(ctx context.Context, nbus NewDocument) (Document, error) {
 	ctx, span := otel.AddSpan(ctx, "documentbus.service.create")
 	defer span.End()
 	now := time.Now()
 
 	doc := Document{
-		ID: uuid.New(),
-		// OriginalName: string,
-		CreatedAt: now,
-		UpdatedAt: now,
+		ID:             uuid.New(),
+		DocumentType:   nbus.DocumentType,
+		Side:           nbus.Side,
+		CustomerID:     nbus.CustomerID,
+		BusinessID:     nbus.BusinessID,
+		OriginalName:   nbus.File.OriginalName,
+		FileName:       nbus.File.Name,
+		CreatedAt:      now,
+		UpdatedAt:      now,
+		Classification: nbus.Classification,
+	}
+
+	s3, err := aws.NewS3(aws.Config{
+		Env: srv.envvar,
+		Log: srv.log,
+	})
+	if err != nil {
+		return Document{}, err
+	}
+
+	if err := s3.Upload(nbus.File.Data, nbus.File.Name); err != nil {
+		return Document{}, err
+	}
+
+	if err := srv.repo.Add(ctx, doc); err != nil {
+		return Document{}, err
 	}
 
 	return doc, nil

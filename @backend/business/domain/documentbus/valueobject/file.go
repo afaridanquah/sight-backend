@@ -2,7 +2,6 @@ package valueobject
 
 import (
 	"fmt"
-	"mime/multipart"
 	"path/filepath"
 	"strings"
 
@@ -13,9 +12,9 @@ type File struct {
 	//Generated filename to ensure uniques
 	Name string
 	// Original filename by the uploader
-	FileName string
-	Size     int64
-	Data     multipart.File
+	OriginalName string
+	Size         int64
+	Data         []byte
 }
 
 var allowedExtensions = map[string]bool{
@@ -27,7 +26,7 @@ var allowedExtensions = map[string]bool{
 
 const maxFileSize = 2 * 1024 * 1024 // 2 MB
 
-func NewFile(n string, size int64, data multipart.File) (File, error) {
+func NewFile(n string, size int64, data []byte) (File, error) {
 	ext := filepath.Ext(n)
 	if !allowedExtensions[ext] {
 		return File{}, fmt.Errorf("extension not allowed %s", ext)
@@ -41,9 +40,9 @@ func NewFile(n string, size int64, data multipart.File) (File, error) {
 	name := strings.Join([]string{id, ext}, "")
 
 	return File{
-		FileName: name,
-		Name:     name,
-		Size:     size,
-		Data:     data,
+		OriginalName: name,
+		Name:         name,
+		Size:         size,
+		Data:         data,
 	}, nil
 }

@@ -22,6 +22,7 @@ type Business struct {
 	Documents              []valueobject.Document
 	AdminID                string
 	Status                 valueobject.Status
+	OrgID                  uuid.UUID
 	CreatedAt              time.Time
 	UpdatedAt              time.Time
 }
@@ -31,8 +32,11 @@ type NewBusiness struct {
 	DoingBusinessAs string
 	AdminID         string
 	Entity          valueobject.BusinessEntity
+	OrgID           uuid.UUID
+	Website         string
 	EmailAddresses  []valueobject.Email
 	PhoneNumbers    []valueobject.Phone
+	Address         valueobject.Address
 }
 
 type UpdateBusiness struct {
@@ -40,4 +44,7 @@ type UpdateBusiness struct {
 	DoingBusinessAs *string
 	EmailAddresses  *[]valueobject.Email
 	PhoneNumbers    *[]valueobject.Phone
+	Website         *string
+	Entity          *valueobject.BusinessEntity
+	Address         *valueobject.Address
 }

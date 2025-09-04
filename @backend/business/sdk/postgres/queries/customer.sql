@@ -1,5 +1,5 @@
 -- name: CreateCustomer :exec
-    INSERT INTO customers(id, first_name, last_name, middle_name, date_of_birth, birth_country, city_of_birth, email, phone_number, business_id, creator_id, identifications, addresses, created_at, updated_at)
+    INSERT INTO customers(id, org_id, first_name, last_name, middle_name, date_of_birth, birth_country, city_of_birth, email, phone_number, creator_id, identifications, addresses, created_at, updated_at)
     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)
     RETURNING *;
 
@@ -7,10 +7,10 @@
     SELECT * FROM customers
     WHERE customers.id = $1;
 
--- name: QueryCustomerByAndBusinessID :one
+-- name: QueryCustomerByAndOrgID :one
     SELECT * FROM customers
     WHERE customers.id = $1
-    AND customers.business_id = $2;
+    AND customers.org_id = $2;
 
 -- name: UpdateCustomer :exec
     UPDATE customers

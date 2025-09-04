@@ -8,22 +8,27 @@ import (
 )
 
 type Document struct {
-	ID           uuid.UUID
-	OriginalName string
-	FilePath     string
-	DocumentType valueobject.DocumentType
-	UserID       uuid.UUID
-	User         valueobject.User
-	BusinessID   uuid.UUID
-	Status       valueobject.Status
-	CreatedAt    time.Time
-	UpdatedAt    time.Time
+	ID             uuid.UUID
+	Parent         uuid.UUID
+	DocumentType   valueobject.DocumentType
+	Side           valueobject.Side
+	Classification valueobject.Classification
+	CustomerID     uuid.UUID
+	OriginalName   string
+	FileName       string
+	Customer       valueobject.User
+	BusinessID     uuid.UUID
+	OrgID          uuid.UUID
+	Status         valueobject.Status
+	CreatedAt      time.Time
+	UpdatedAt      time.Time
 }
 
 type NewDocument struct {
-	OriginalName string
-	File         valueobject.File
-	DocumentType valueobject.DocumentType
-	UserID       uuid.UUID
-	BusinessID   uuid.UUID
+	DocumentType   valueobject.DocumentType
+	Classification valueobject.Classification
+	CustomerID     uuid.UUID
+	BusinessID     uuid.UUID
+	Side           valueobject.Side
+	File           valueobject.File
 }

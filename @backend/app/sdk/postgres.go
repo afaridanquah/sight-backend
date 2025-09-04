@@ -8,11 +8,12 @@ import (
 
 	"bitbucket.org/msafaridanquah/verifylab-service/foundation/envvar"
 	"bitbucket.org/msafaridanquah/verifylab-service/foundation/ierr"
+	"github.com/exaring/otelpgx"
 	"github.com/jackc/pgx/v5/pgxpool"
 	_ "github.com/jackc/pgx/v5/stdlib"
 )
 
-func NewPostgreSQL(conf *envvar.Configuration) (*pgxpool.Pool, error) {
+func NewPostgreSQL(ctx context.Context, conf *envvar.Configuration) (*pgxpool.Pool, error) {
 	get := func(v string) string {
 		res, err := conf.Get(v)
 		if err != nil {
@@ -43,13 +44,24 @@ func NewPostgreSQL(conf *envvar.Configuration) (*pgxpool.Pool, error) {
 
 	dsn.RawQuery = q.Encode()
 
-	pool, err := pgxpool.New(context.Background(), dsn.String())
+	cfg, err := pgxpool.ParseConfig(dsn.String())
 	if err != nil {
-		return nil, ierr.WrapErrorf(err, ierr.ErrorCodeUnknown, "pgxpool.Connect")
+		return nil, fmt.Errorf("create connection pool: %w", err)
 	}
 
-	if err := pool.Ping(context.Background()); err != nil {
-		return nil, ierr.WrapErrorf(err, ierr.ErrorCodeUnknown, "db.Ping")
+	cfg.ConnConfig.Tracer = otelpgx.NewTracer()
+
+	pool, err := pgxpool.NewWithConfig(ctx, cfg)
+	if err != nil {
+		return nil, ierr.WrapErrorf(err, ierr.InvalidArgument, "pgxpool.Connect")
+	}
+
+	if err := pool.Ping(ctx); err != nil {
+		return nil, ierr.WrapErrorf(err, ierr.InvalidArgument, "db.Ping")
+	}
+
+	if err := otelpgx.RecordStats(pool); err != nil {
+		return nil, fmt.Errorf("unable to record database stats: %w", err)
 	}
 
 	return pool, nil

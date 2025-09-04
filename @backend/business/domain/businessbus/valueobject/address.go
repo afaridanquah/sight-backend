@@ -17,7 +17,7 @@ var (
 	ErrAddressCountryRequired = errors.New("country is required")
 )
 
-func Parse(line1 string, line2 *string, city string, state string, cc string) (Address, error) {
+func ParseAddress(line1 string, line2 *string, city string, state string, cc string) (Address, error) {
 	if line1 == "" {
 		return Address{}, ErrAddressLine1Required
 	}
@@ -49,4 +49,8 @@ func Parse(line1 string, line2 *string, city string, state string, cc string) (A
 	}
 
 	return address, nil
+}
+
+func (a *Address) IsEmpty() bool {
+	return a == &Address{}
 }

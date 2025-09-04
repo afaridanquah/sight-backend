@@ -1,18 +1,22 @@
 package aws
 
 import (
+	"bytes"
 	"context"
 
 	"bitbucket.org/msafaridanquah/verifylab-service/foundation/envvar"
 	"bitbucket.org/msafaridanquah/verifylab-service/foundation/logger"
+	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/credentials"
-	"github.com/aws/aws-sdk-go-v2/service/s3"
+	"github.com/aws/aws-sdk-go-v2/feature/s3/manager"
+	awss3 "github.com/aws/aws-sdk-go-v2/service/s3"
 )
 
 const (
 	AWS_S3_REGION = "us-east-2"  // Region
 	AWS_S3_BUCKET = "sight.disk" // Bucket
+
 )
 
 type Config struct {
@@ -21,7 +25,7 @@ type Config struct {
 }
 
 type AWSS3 struct {
-	Client *s3.Client
+	Client *awss3.Client
 }
 
 func NewS3(conf Config) (*AWSS3, error) {
@@ -40,14 +44,29 @@ func NewS3(conf Config) (*AWSS3, error) {
 	creds := credentials.NewStaticCredentialsProvider(key, secret, "")
 
 	ctx := context.TODO()
-	cfg, err := config.LoadDefaultConfig(ctx, config.WithCredentialsProvider(creds))
+	cfg, err := config.LoadDefaultConfig(ctx, config.WithCredentialsProvider(creds), config.WithRegion(AWS_S3_REGION))
 	if err != nil {
 		return &AWSS3{}, err
 	}
 
-	client := s3.NewFromConfig(cfg)
+	client := awss3.NewFromConfig(cfg)
 
 	return &AWSS3{
 		Client: client,
 	}, nil
+}
+
+func (s3 *AWSS3) Upload(file []byte, filename string) error {
+	uploader := manager.NewUploader(s3.Client)
+	_, err := uploader.Upload(context.TODO(), &awss3.PutObjectInput{
+		Bucket: aws.String(AWS_S3_BUCKET),
+		Key:    aws.String(filename),
+		Body:   bytes.NewReader(file),
+	})
+
+	if err != nil {
+		return err
+	}
+
+	return nil
 }

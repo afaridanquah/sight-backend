@@ -17,7 +17,7 @@ type Customer struct {
 	ID              uuid.UUID
 	Person          valueobject.Person
 	UserID          uuid.UUID
-	BusinessID      uuid.UUID
+	OrgID           uuid.UUID
 	DateOfBirth     valueobject.DateOfBirth
 	CityOfBirth     string
 	Identifications []valueobject.Identification

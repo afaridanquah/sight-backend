@@ -97,6 +97,50 @@ func (ns NullDecision) Value() (driver.Value, error) {
 	return string(ns.Decision), nil
 }
 
+type DocumentStatus string
+
+const (
+	DocumentStatusPENDING  DocumentStatus = "PENDING"
+	DocumentStatusREJECTED DocumentStatus = "REJECTED"
+	DocumentStatusAPPROVED DocumentStatus = "APPROVED"
+	DocumentStatusDRAFT    DocumentStatus = "DRAFT"
+)
+
+func (e *DocumentStatus) Scan(src interface{}) error {
+	switch s := src.(type) {
+	case []byte:
+		*e = DocumentStatus(s)
+	case string:
+		*e = DocumentStatus(s)
+	default:
+		return fmt.Errorf("unsupported scan type for DocumentStatus: %T", src)
+	}
+	return nil
+}
+
+type NullDocumentStatus struct {
+	DocumentStatus DocumentStatus
+	Valid          bool // Valid is true if DocumentStatus is not NULL
+}
+
+// Scan implements the Scanner interface.
+func (ns *NullDocumentStatus) Scan(value interface{}) error {
+	if value == nil {
+		ns.DocumentStatus, ns.Valid = "", false
+		return nil
+	}
+	ns.Valid = true
+	return ns.DocumentStatus.Scan(value)
+}
+
+// Value implements the driver Valuer interface.
+func (ns NullDocumentStatus) Value() (driver.Value, error) {
+	if !ns.Valid {
+		return nil, nil
+	}
+	return string(ns.DocumentStatus), nil
+}
+
 type Entity string
 
 const (
@@ -274,6 +318,7 @@ func (ns NullStatus) Value() (driver.Value, error) {
 
 type Businesses struct {
 	ID             uuid.UUID
+	OrgID          uuid.NullUUID
 	LegalName      string
 	Entity         Entity
 	TaxID          pgtype.Text
@@ -295,7 +340,7 @@ type Customers struct {
 	FirstName       string
 	LastName        string
 	MiddleName      pgtype.Text
-	BusinessID      uuid.NullUUID
+	OrgID           uuid.NullUUID
 	CreatorID       uuid.NullUUID
 	Email           pgtype.Text
 	PhoneNumber     pgtype.Text
@@ -307,6 +352,20 @@ type Customers struct {
 	CreatedAt       pgtype.Timestamp
 	UpdatedAt       pgtype.Timestamp
 	DeletedAt       pgtype.Timestamp
+}
+
+type Documents struct {
+	ID           uuid.UUID
+	CustomerID   uuid.NullUUID
+	BusinessID   uuid.NullUUID
+	OriginalName pgtype.Text
+	Filename     pgtype.Text
+	Mimetype     pgtype.Text
+	CreatedAt    pgtype.Timestamp
+	Status       NullDocumentStatus
+	CreatorID    uuid.NullUUID
+	Metadata     []byte
+	UpdatedAt    pgtype.Timestamp
 }
 
 type Identifications struct {
@@ -329,6 +388,14 @@ type Identifications struct {
 	ZipCode            pgtype.Text
 	CreatedAt          pgtype.Timestamp
 	UpdatedAt          pgtype.Timestamp
+}
+
+type Organizations struct {
+	ID        uuid.UUID
+	Name      string
+	Status    NullStatus
+	CreatedAt pgtype.Timestamp
+	UpdatedAt pgtype.Timestamp
 }
 
 type Otps struct {
@@ -361,7 +428,9 @@ type Verifications struct {
 	VerificationType pgtype.Text
 	CustomerID       uuid.UUID
 	Customer         []byte
-	BusinessID       uuid.UUID
+	Business         []byte
+	BusinessID       uuid.NullUUID
+	OrgID            uuid.NullUUID
 	CreatorID        uuid.UUID
 	Outcome          NullOutcome
 	AmlInsight       []byte

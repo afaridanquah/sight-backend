@@ -56,8 +56,8 @@ func (r *Repository) Add(ctx context.Context, bus customerbus.Customer) error {
 			String: bus.BirthCountry.Alpha2(),
 			Valid:  true,
 		},
-		BusinessID: uuid.NullUUID{
-			UUID:  bus.BusinessID,
+		OrgID: uuid.NullUUID{
+			UUID:  bus.OrgID,
 			Valid: true,
 		},
 		CreatorID: uuid.NullUUID{
@@ -130,15 +130,15 @@ func (r *Repository) Update(ctx context.Context, bus customerbus.Customer) error
 	return nil
 }
 
-func (r *Repository) QueryByCustomerAndBusinessID(ctx context.Context, id uuid.UUID, businessID uuid.UUID) (customerbus.Customer, error) {
+func (r *Repository) QueryByIDAndOrgID(ctx context.Context, id uuid.UUID, orgID uuid.UUID) (customerbus.Customer, error) {
 	ctx, span := otel.AddSpan(ctx, "business.customerbus.postgres.querybycustomerandbusinessid")
 	span.SetAttributes(semconv.DBSystemPostgreSQL)
 	defer span.End()
 
-	resp, err := r.queries.QueryCustomerByAndBusinessID(ctx, db.QueryCustomerByAndBusinessIDParams{
+	resp, err := r.queries.QueryCustomerByAndOrgID(ctx, db.QueryCustomerByAndOrgIDParams{
 		ID: id,
-		BusinessID: uuid.NullUUID{
-			UUID:  businessID,
+		OrgID: uuid.NullUUID{
+			UUID:  orgID,
 			Valid: true,
 		},
 	})

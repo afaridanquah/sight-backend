@@ -6,7 +6,6 @@ import (
 	"time"
 
 	"bitbucket.org/msafaridanquah/verifylab-service/business/domain/customerbus/valueobject"
-	"bitbucket.org/msafaridanquah/verifylab-service/foundation/ierr"
 	"bitbucket.org/msafaridanquah/verifylab-service/foundation/logger"
 	"bitbucket.org/msafaridanquah/verifylab-service/foundation/otel"
 	"github.com/google/uuid"
@@ -59,13 +58,13 @@ func (srv *Service) Create(ctx context.Context, nc NewCustomer) (Customer, error
 	now := time.Now()
 
 	userID := uuid.New()
-	businessID := uuid.MustParse("6fe9cace-7c71-4e4b-b943-dd2f5bb21693")
+	orgID := uuid.MustParse("6fe9cace-7c71-4e4b-b943-dd2f5bb21693")
 
 	customer := Customer{
 		ID:              uuid.New(),
 		Person:          nc.Person,
 		UserID:          userID,
-		BusinessID:      businessID,
+		OrgID:           orgID,
 		DateOfBirth:     nc.DateOfBirth,
 		Email:           nc.Email,
 		PhoneNumber:     nc.PhoneNumber,
@@ -76,10 +75,8 @@ func (srv *Service) Create(ctx context.Context, nc NewCustomer) (Customer, error
 		UpdatedAt:       now,
 	}
 
-	if srv.repo {
-		if err := srv.repo.Add(ctx, customer); err != nil {
-			return Customer{}, ierr.WrapErrorf(err, ierr.ErrorCodeUnknown, "repo.create")
-		}
+	if err := srv.repo.Add(ctx, customer); err != nil {
+		return Customer{}, err
 	}
 
 	return customer, nil
@@ -118,20 +115,16 @@ func (srv *Service) Update(ctx context.Context, cust Customer, up UpdateCustomer
 	return cust, nil
 }
 
-// func (srv *Service) Delete(ctx context.Context, custID uuid.UUID) error {
-
-// }
-
-func (srv *Service) QueryByIDAndBusinessID(ctx context.Context, custID uuid.UUID) (Customer, error) {
+func (srv *Service) FindByIDAndOrgID(ctx context.Context, custID uuid.UUID) (Customer, error) {
 	ctx, span := otel.AddSpan(ctx, "business.customerbus.service.querybyidandbusinessid")
 	defer span.End()
 
 	//Get businessID from middleware
-	businessID := uuid.MustParse("6fe9cace-7c71-4e4b-b943-dd2f5bb21693")
+	orgID := uuid.MustParse("6fe9cace-7c71-4e4b-b943-dd2f5bb21693")
 
-	cus, err := srv.repo.QueryByCustomerAndBusinessID(ctx, custID, businessID)
+	cus, err := srv.repo.QueryByIDAndOrgID(ctx, custID, orgID)
 	if err != nil {
-		return Customer{}, ierr.WrapErrorf(err, ierr.ErrorCodeUnknown, "repo.querybyidandbusinessid")
+		return Customer{}, err
 	}
 
 	return cus, nil

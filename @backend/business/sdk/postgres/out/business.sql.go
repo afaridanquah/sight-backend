@@ -13,41 +13,20 @@ import (
 )
 
 const GetBusinessByID = `-- name: GetBusinessByID :one
-SELECT id, legal_name, entity, tax_id, dba, jurisdiction, admin_id, owners, address, website, phone_numbers, email_addresses, documents, created_at, updated_at FROM businesses WHERE id = $1
+SELECT id, org_id, legal_name, entity, tax_id, dba, jurisdiction, admin_id, owners, address, website, phone_numbers, email_addresses, documents, created_at, updated_at FROM businesses WHERE id = $1 AND org_id = $2
 `
 
-func (q *Queries) GetBusinessByID(ctx context.Context, id uuid.UUID) (Businesses, error) {
-	row := q.db.QueryRow(ctx, GetBusinessByID, id)
-	var i Businesses
-	err := row.Scan(
-		&i.ID,
-		&i.LegalName,
-		&i.Entity,
-		&i.TaxID,
-		&i.Dba,
-		&i.Jurisdiction,
-		&i.AdminID,
-		&i.Owners,
-		&i.Address,
-		&i.Website,
-		&i.PhoneNumbers,
-		&i.EmailAddresses,
-		&i.Documents,
-		&i.CreatedAt,
-		&i.UpdatedAt,
-	)
-	return i, err
+type GetBusinessByIDParams struct {
+	ID    uuid.UUID
+	OrgID uuid.NullUUID
 }
 
-const GetBusinessByTaxID = `-- name: GetBusinessByTaxID :one
-SELECT id, legal_name, entity, tax_id, dba, jurisdiction, admin_id, owners, address, website, phone_numbers, email_addresses, documents, created_at, updated_at FROM businesses WHERE tax_id = $1
-`
-
-func (q *Queries) GetBusinessByTaxID(ctx context.Context, taxID pgtype.Text) (Businesses, error) {
-	row := q.db.QueryRow(ctx, GetBusinessByTaxID, taxID)
+func (q *Queries) GetBusinessByID(ctx context.Context, arg GetBusinessByIDParams) (Businesses, error) {
+	row := q.db.QueryRow(ctx, GetBusinessByID, arg.ID, arg.OrgID)
 	var i Businesses
 	err := row.Scan(
 		&i.ID,
+		&i.OrgID,
 		&i.LegalName,
 		&i.Entity,
 		&i.TaxID,
@@ -70,6 +49,7 @@ const InsertBusiness = `-- name: InsertBusiness :exec
 INSERT INTO businesses (
     id,
     legal_name,
+    org_id,
     tax_id,
     entity,
     jurisdiction,
@@ -82,12 +62,13 @@ INSERT INTO businesses (
     email_addresses,
     created_at,
     updated_at
-) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14)
+) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15)
 `
 
 type InsertBusinessParams struct {
 	ID             uuid.UUID
 	LegalName      string
+	OrgID          uuid.NullUUID
 	TaxID          pgtype.Text
 	Entity         Entity
 	Jurisdiction   string
@@ -106,6 +87,7 @@ func (q *Queries) InsertBusiness(ctx context.Context, arg InsertBusinessParams) 
 	_, err := q.db.Exec(ctx, InsertBusiness,
 		arg.ID,
 		arg.LegalName,
+		arg.OrgID,
 		arg.TaxID,
 		arg.Entity,
 		arg.Jurisdiction,
@@ -118,6 +100,58 @@ func (q *Queries) InsertBusiness(ctx context.Context, arg InsertBusinessParams) 
 		arg.EmailAddresses,
 		arg.CreatedAt,
 		arg.UpdatedAt,
+	)
+	return err
+}
+
+const UpdateBusinessByID = `-- name: UpdateBusinessByID :exec
+UPDATE businesses
+SET
+    legal_name      = $2,
+    tax_id          = $3,
+    entity          = $4,
+    jurisdiction    = $5,
+    dba             = $6,
+    admin_id        = $7,
+    address         = $8,   -- JSONB
+    website         = $9,
+    phone_numbers   = $10,  -- ARRAY or JSONB
+    email_addresses = $11,  -- ARRAY or JSONB
+    updated_at = $12
+WHERE id = $1 AND org_id = $13
+`
+
+type UpdateBusinessByIDParams struct {
+	ID             uuid.UUID
+	LegalName      string
+	TaxID          pgtype.Text
+	Entity         Entity
+	Jurisdiction   string
+	Dba            string
+	AdminID        uuid.UUID
+	Address        []byte
+	Website        pgtype.Text
+	PhoneNumbers   []byte
+	EmailAddresses []byte
+	UpdatedAt      pgtype.Timestamp
+	OrgID          uuid.NullUUID
+}
+
+func (q *Queries) UpdateBusinessByID(ctx context.Context, arg UpdateBusinessByIDParams) error {
+	_, err := q.db.Exec(ctx, UpdateBusinessByID,
+		arg.ID,
+		arg.LegalName,
+		arg.TaxID,
+		arg.Entity,
+		arg.Jurisdiction,
+		arg.Dba,
+		arg.AdminID,
+		arg.Address,
+		arg.Website,
+		arg.PhoneNumbers,
+		arg.EmailAddresses,
+		arg.UpdatedAt,
+		arg.OrgID,
 	)
 	return err
 }

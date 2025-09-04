@@ -9,20 +9,32 @@ import (
 type Error struct {
 	orig error
 	msg  string
-	code ErrorCode
+	code ErrCode
 }
 
-// ErrorCode defines supported error codes.
-type ErrorCode uint
+// ErrCode represents an error code in the system.
+type ErrCode struct {
+	value int
+}
 
-const (
-	ErrorCodeUnknown ErrorCode = iota
-	ErrorCodeNotFound
-	ErrorCodeInvalidArgument
-)
+// Value returns the integer value of the error code.
+func (ec ErrCode) Value() int {
+	return ec.value
+}
+
+// String returns the string representation of the error code.
+func (ec ErrCode) String() string {
+	return codeNames[ec]
+}
+
+// HTTPStatus implements the web package httpStatus interface so the
+// web framework can use the correct http status.
+func (e *Error) HTTPStatus() int {
+	return httpStatus[e.code]
+}
 
 // WrapErrorf returns a wrapped error.
-func WrapErrorf(orig error, code ErrorCode, format string, a ...any) error {
+func WrapErrorf(orig error, code ErrCode, format string, a ...any) error {
 	return &Error{
 		code: code,
 		orig: orig,
@@ -31,7 +43,7 @@ func WrapErrorf(orig error, code ErrorCode, format string, a ...any) error {
 }
 
 // NewErrorf instantiates a new error.
-func NewErrorf(code ErrorCode, format string, a ...any) error {
+func NewErrorf(code ErrCode, format string, a ...any) error {
 	return WrapErrorf(nil, code, format, a...)
 }
 
@@ -50,6 +62,6 @@ func (e *Error) Unwrap() error {
 }
 
 // Code returns the code representing this error.
-func (e *Error) Code() ErrorCode {
+func (e *Error) Code() ErrCode {
 	return e.code
 }

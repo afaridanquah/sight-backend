@@ -7,6 +7,7 @@ CREATE TYPE entity AS ENUM ('ESTATE', 'SOLE_PROPRIETOR', 'CORPORATION', 'EXEMPT_
 
 CREATE TABLE businesses (
     id UUID PRIMARY KEY,
+    org_id UUID,
     legal_name TEXT NOT NULL,
     entity entity NOT NULL,
     tax_id TEXT,
@@ -29,5 +30,7 @@ CREATE TABLE businesses (
 DROP TABLE businesses;
 
 DROP TYPE status;
+
+DROP TYPE entity;
 
 -- +goose StatementEnd

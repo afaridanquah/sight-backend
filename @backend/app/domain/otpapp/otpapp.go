@@ -30,10 +30,10 @@ func newApp(os *otpbus.Service, cs *customerbus.Service, log *logger.Logger) *Ap
 
 func (app *App) create(w http.ResponseWriter, r *http.Request) {
 	var napp NewOTP
-
+	var ctx = r.Context()
 	if err := json.NewDecoder(r.Body).Decode(&napp); err != nil {
-		web.RenderErrorResponse(app.log, w, r, "invalid request",
-			ierr.WrapErrorf(err, ierr.ErrorCodeInvalidArgument, "json decoder"))
+		web.RenderErrorResponse(ctx, w, r, "invalid request",
+			ierr.WrapErrorf(err, ierr.InvalidArgument, "json decoder"))
 		return
 	}
 
@@ -48,35 +48,35 @@ func (app *App) create(w http.ResponseWriter, r *http.Request) {
 	custID, err := uuid.Parse(id)
 	if err != nil {
 		app.log.Error(r.Context(), "otpapp.parseCustID", err)
-		web.RenderErrorResponse(app.log, w, r, err.Error(), err)
+		web.RenderErrorResponse(ctx, w, r, err.Error(), err)
 		return
 	}
 
-	customer, err := app.customerService.QueryByIDAndBusinessID(r.Context(), custID)
+	customer, err := app.customerService.FindByIDAndOrgID(r.Context(), custID)
 	if err != nil {
-		web.RenderErrorResponse(app.log, w, r, err.Error(), err)
+		web.RenderErrorResponse(ctx, w, r, err.Error(), err)
 		return
 	}
 
 	switch {
 	case napp.Channel == "PHONE" && customer.PhoneNumber.IsEmpty():
-		web.RenderErrorResponse(app.log, w, r, "validation", ierr.WrapErrorf(fmt.Errorf("customer: %s has no valid phone number", customer.ID), ierr.ErrorCodeInvalidArgument, "empty phone number"))
+		web.RenderErrorResponse(ctx, w, r, "validation", ierr.WrapErrorf(fmt.Errorf("customer: %s has no valid phone number", customer.ID), ierr.InvalidArgument, "empty phone number"))
 		return
 	case napp.Channel == "EMAIL" && customer.Email.IsEmpty():
-		web.RenderErrorResponse(app.log, w, r, "validation", ierr.WrapErrorf(fmt.Errorf("customer: %s has no valid email address", customer.ID), ierr.ErrorCodeInvalidArgument, "empty phone number"))
+		web.RenderErrorResponse(ctx, w, r, "validation", ierr.WrapErrorf(fmt.Errorf("customer: %s has no valid email address", customer.ID), ierr.InvalidArgument, "empty phone number"))
 		return
 	}
 
 	if err := napp.Validate(); err != nil {
 		app.log.Error(r.Context(), "otpapp.validate", err)
-		web.RenderErrorResponse(app.log, w, r, "validation", ierr.WrapErrorf(err, ierr.ErrorCodeInvalidArgument, "empty email"))
+		web.RenderErrorResponse(ctx, w, r, "validation", ierr.WrapErrorf(err, ierr.InvalidArgument, "empty email"))
 		return
 	}
 
 	newbus, err := toBusNewOTP(napp)
 	if err != nil {
 		app.log.Error(r.Context(), "otpapp.toBusNewOTP", err)
-		web.RenderErrorResponse(app.log, w, r, err.Error(), err)
+		web.RenderErrorResponse(ctx, w, r, err.Error(), err)
 		return
 	}
 
@@ -92,7 +92,7 @@ func (app *App) create(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		app.log.Error(r.Context(), "otpapp.srv.Create", err)
 
-		web.RenderErrorResponse(app.log, w, r, err.Error(), err)
+		web.RenderErrorResponse(ctx, w, r, err.Error(), err)
 		return
 	}
 
@@ -104,8 +104,8 @@ func (app *App) verify(w http.ResponseWriter, r *http.Request) {
 	var napp VerifyOTP
 	ctx := r.Context()
 	if err := json.NewDecoder(r.Body).Decode(&napp); err != nil {
-		web.RenderErrorResponse(app.log, w, r, "invalid request",
-			ierr.WrapErrorf(err, ierr.ErrorCodeInvalidArgument, "json decoder"))
+		web.RenderErrorResponse(ctx, w, r, "invalid request",
+			ierr.WrapErrorf(err, ierr.InvalidArgument, "json decoder"))
 		return
 	}
 
@@ -120,31 +120,31 @@ func (app *App) verify(w http.ResponseWriter, r *http.Request) {
 	custID, err := uuid.Parse(id)
 	if err != nil {
 		app.log.Error(ctx, "otpapp.parseCustID", err)
-		web.RenderErrorResponse(app.log, w, r, err.Error(), err)
+		web.RenderErrorResponse(ctx, w, r, err.Error(), err)
 		return
 	}
 
-	customer, err := app.customerService.QueryByIDAndBusinessID(ctx, custID)
+	customer, err := app.customerService.FindByIDAndOrgID(ctx, custID)
 	if err != nil {
-		web.RenderErrorResponse(app.log, w, r, err.Error(), err)
+		web.RenderErrorResponse(ctx, w, r, err.Error(), err)
 		return
 	}
 
 	if err := napp.Validate(); err != nil {
 		app.log.Error(ctx, "otpapp.validate", err)
-		web.RenderErrorResponse(app.log, w, r, "validation", ierr.WrapErrorf(err, ierr.ErrorCodeInvalidArgument, "empty email"))
+		web.RenderErrorResponse(ctx, w, r, "validation", ierr.WrapErrorf(err, ierr.InvalidArgument, "empty email"))
 		return
 	}
 
 	bus, err := toBusVerifyOTP(napp, customer.ID)
 	if err != nil {
-		web.RenderErrorResponse(app.log, w, r, err.Error(), err)
+		web.RenderErrorResponse(ctx, w, r, err.Error(), err)
 		return
 	}
 
 	otpbus, err := app.otpService.Verify(ctx, bus)
 	if err != nil {
-		web.RenderErrorResponse(app.log, w, r, err.Error(), err)
+		web.RenderErrorResponse(ctx, w, r, err.Error(), err)
 		return
 	}
 

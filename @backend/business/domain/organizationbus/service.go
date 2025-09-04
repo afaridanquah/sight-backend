@@ -1,4 +1,4 @@
-package identificationbus
+package organizationbus
 
 import (
 	"context"
@@ -6,29 +6,33 @@ import (
 	"time"
 
 	"bitbucket.org/msafaridanquah/verifylab-service/foundation/logger"
+	"bitbucket.org/msafaridanquah/verifylab-service/foundation/otel"
+	"github.com/google/uuid"
 	"github.com/mercari/go-circuitbreaker"
 )
 
 type Service struct {
-	repo Repository
-	log  *logger.Logger
-	cb   *circuitbreaker.CircuitBreaker
+	repo   Repository
+	logger *logger.Logger
+	cb     *circuitbreaker.CircuitBreaker
 }
+
 type ServiceConfig func(*Service) error
 
 func New(repo Repository, logger *logger.Logger, cfgs ...ServiceConfig) (*Service, error) {
-	var ser = &Service{
-		repo: repo,
+	var srv = &Service{
+		logger: logger,
+		repo:   repo,
 	}
 
 	for _, cfg := range cfgs {
-		err := cfg(ser)
+		err := cfg(srv)
 		if err != nil {
 			return nil, err
 		}
 	}
 
-	ser.cb = circuitbreaker.New(
+	srv.cb = circuitbreaker.New(
 		circuitbreaker.WithOpenTimeout(time.Minute*2),
 		circuitbreaker.WithTripFunc(circuitbreaker.NewTripFuncConsecutiveFailures(3)),
 		circuitbreaker.WithOnStateChangeHookFn(func(oldState, newState circuitbreaker.State) {
@@ -39,9 +43,24 @@ func New(repo Repository, logger *logger.Logger, cfgs ...ServiceConfig) (*Servic
 		}),
 	)
 
-	return ser, nil
+	return srv, nil
 }
 
-func (srv *Service) Create(ctx context.Context, napp NewIdentification) (Identification, error) {
+func (srv *Service) Create(ctx context.Context, nbus NewOrganization) (Organization, error) {
+	ctx, span := otel.AddSpan(ctx, "documentbus.service.create")
+	defer span.End()
+	now := time.Now()
 
+	org := Organization{
+		ID:        uuid.New(),
+		Name:      nbus.Name,
+		CreatedAt: now,
+		UpdatedAt: now,
+	}
+
+	if err := srv.repo.Add(ctx, org); err != nil {
+		return Organization{}, nil
+	}
+
+	return org, nil
 }

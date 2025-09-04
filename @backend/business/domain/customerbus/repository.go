@@ -15,7 +15,7 @@ var (
 )
 
 type Repository interface {
-	QueryByCustomerAndBusinessID(ctx context.Context, id uuid.UUID, businessID uuid.UUID) (Customer, error)
+	QueryByIDAndOrgID(ctx context.Context, id uuid.UUID, orgID uuid.UUID) (Customer, error)
 	Add(ctx context.Context, c Customer) error
 	Update(ctx context.Context, cust Customer) error
 }

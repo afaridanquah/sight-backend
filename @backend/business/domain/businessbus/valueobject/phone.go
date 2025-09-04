@@ -86,6 +86,23 @@ func ParseIntlPhone(digits string) (Phone, error) {
 	}, nil
 }
 
+func ParseIntlPhoneNumbers(phones []string) ([]Phone, error) {
+	if len(phones) > 0 {
+		parsed := make([]Phone, len(phones))
+		for i, v := range phones {
+			e, err := ParseIntlPhone(v)
+			if err != nil {
+				return []Phone{}, err
+			}
+			parsed[i] = e
+		}
+
+		return parsed, nil
+	}
+
+	return []Phone{}, fmt.Errorf("no phone number provided")
+}
+
 func (p Phone) IsZero() bool {
 	return p == (Phone{})
 }

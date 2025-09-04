@@ -102,7 +102,7 @@ func toBusCustomer(resp db.Customers, vaulti *vaulti.Vaulty) (customerbus.Custom
 		ID:              resp.ID,
 		Person:          person,
 		UserID:          resp.CreatorID.UUID,
-		BusinessID:      resp.BusinessID.UUID,
+		OrgID:           resp.OrgID.UUID,
 		Email:           email,
 		BirthCountry:    birthCountry,
 		DateOfBirth:     dob,

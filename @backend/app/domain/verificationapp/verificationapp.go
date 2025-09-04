@@ -28,42 +28,45 @@ func newApp(vs *verificationbus.Service, cs *customerbus.Service, log *logger.Lo
 
 func (app *App) screen(w http.ResponseWriter, r *http.Request) {
 	var napp NewVerification
+	var ctx = r.Context()
 	if err := json.NewDecoder(r.Body).Decode(&napp); err != nil {
-		web.RenderErrorResponse(app.log, w, r, "invalid request",
-			ierr.WrapErrorf(err, ierr.ErrorCodeInvalidArgument, "json decoder"))
+		web.RenderErrorResponse(ctx, w, r, "invalid request",
+			ierr.WrapErrorf(err, ierr.InvalidArgument, "json decoder"))
 		return
 	}
 
-	defer r.Body.Close()
+	defer func() {
+		_ = r.Body.Close()
+	}()
 
 	if err := napp.Validate(); err != nil {
-		web.RenderErrorResponse(app.log, w, r, "validation", ierr.WrapErrorf(err, ierr.ErrorCodeInvalidArgument, "json decoder"))
+		web.RenderErrorResponse(ctx, w, r, "validation", ierr.WrapErrorf(err, ierr.InvalidArgument, "json decoder"))
 		return
 	}
 
 	parsedCustomerID, err := uuid.Parse(napp.CustomerID)
 	if err != nil {
-		web.RenderErrorResponse(app.log, w, r, "parse uuid", err)
+		web.RenderErrorResponse(ctx, w, r, "parse uuid", err)
 	}
 
-	customer, err := app.customerService.QueryByIDAndBusinessID(r.Context(), parsedCustomerID)
+	customer, err := app.customerService.FindByIDAndOrgID(r.Context(), parsedCustomerID)
 	if err != nil {
-		web.RenderErrorResponse(app.log, w, r, "customer not found", err)
+		web.RenderErrorResponse(ctx, w, r, "customer not found", err)
 	}
 
 	voCustomer, err := toBusVoCustomer(customer)
 	if err != nil {
-		web.RenderErrorResponse(app.log, w, r, "tobusvocustomer", err)
+		web.RenderErrorResponse(ctx, w, r, "tobusvocustomer", err)
 	}
 
 	newbus, err := toBusNewVerification(napp, voCustomer)
 	if err != nil {
-		web.RenderErrorResponse(app.log, w, r, "customer not found", err)
+		web.RenderErrorResponse(ctx, w, r, "customer not found", err)
 	}
 
 	vbus, err := app.verficationService.Create(r.Context(), newbus)
 	if err != nil {
-		web.RenderErrorResponse(app.log, w, r, "bus service create", err)
+		web.RenderErrorResponse(ctx, w, r, "bus service create", err)
 	}
 
 	vapp := toAppVerification(vbus)
