@@ -70,7 +70,7 @@ func toBusBusiness(napp NewBusiness) (businessbus.NewBusiness, error) {
 		return businessbus.NewBusiness{}, err
 	}
 
-	address, err := valueobject.ParseAddress(napp.Address.Address1, &napp.Address.Address2, napp.Address.City, napp.Address.State, napp.Address.Country)
+	address, err := valueobject.ParseAddress(napp.Address.Line1, &napp.Address.Line2, napp.Address.City, napp.Address.State, napp.Address.Country)
 	if err != nil {
 		return businessbus.NewBusiness{}, err
 	}
@@ -134,7 +134,7 @@ func toBusUpdateBusiness(up UpdateBusiness) (businessbus.UpdateBusiness, error) 
 	}
 
 	if up.Address != nil {
-		address, err := valueobject.ParseAddress(up.Address.Address1, &up.Address.Address2, up.Address.City, up.Address.State, up.Address.Country)
+		address, err := valueobject.ParseAddress(up.Address.Line1, &up.Address.Line2, up.Address.City, up.Address.State, up.Address.Country)
 		if err != nil {
 			return businessbus.UpdateBusiness{}, err
 		}

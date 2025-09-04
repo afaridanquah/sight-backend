@@ -3,8 +3,8 @@
 CREATE TYPE channel AS ENUM ('SMS', 'EMAIL');
 
 CREATE TABLE otps (
-    id UUID,
-    customer_id UUID,
+    id VARCHAR(50),
+    customer_id VARCHAR(50),
     hashed_code TEXT,
     code TEXT,
     channel channel,

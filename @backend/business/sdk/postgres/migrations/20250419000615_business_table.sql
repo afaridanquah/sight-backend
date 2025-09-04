@@ -6,14 +6,14 @@ CREATE TYPE entity AS ENUM ('ESTATE', 'SOLE_PROPRIETOR', 'CORPORATION', 'EXEMPT_
 
 
 CREATE TABLE businesses (
-    id UUID PRIMARY KEY,
-    org_id UUID,
+    id VARCHAR(50) PRIMARY KEY,
+    org_id VARCHAR(50),
     legal_name TEXT NOT NULL,
     entity entity NOT NULL,
     tax_id TEXT,
     dba TEXT NOT NULL,
     jurisdiction VARCHAR(2) NOT NULL,
-    admin_id UUID NOT NULL,
+    admin_id VARCHAR(50) NOT NULL,
     owners JSONB,
     address JSONB,
     website VARCHAR(200),
