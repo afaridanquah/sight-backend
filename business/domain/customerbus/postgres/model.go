@@ -10,6 +10,8 @@ import (
 	"bitbucket.org/msafaridanquah/verifylab-service/foundation/vaulti"
 )
 
+const vaultKey = "pii_key"
+
 type Identification struct {
 	IdentificationType string  `json:"identification_type"`
 	Pin                string  `json:"pin"`
@@ -27,7 +29,7 @@ func toDBIdentifications(ids []valueobject.Identification, vaulti *vaulti.Vaulty
 			nationality := v.Nationality.Alpha2()
 			issuedCountry := v.IssedCountry.Alpha2()
 			expDate := v.ExpDate.Format(time.DateOnly)
-			pin, err := vaulti.TransitEncrypt(v.Pin)
+			pin, err := vaulti.TransitEncrypt(v.Pin, vaultKey)
 			if err != nil {
 				return nil, err
 			}
@@ -73,7 +75,7 @@ func toBusCustomer(resp db.Customers, vaulti *vaulti.Vaulty) (customerbus.Custom
 	if len(resp.Identifications) > 0 {
 
 		for i, v := range identifications {
-			decrypted, err := vaulti.TransitDecrypt(v.Pin)
+			decrypted, err := vaulti.TransitDecrypt(v.Pin, vaultKey)
 			if err != nil {
 				return customerbus.Customer{}, err
 			}
@@ -100,7 +102,7 @@ func toBusCustomer(resp db.Customers, vaulti *vaulti.Vaulty) (customerbus.Custom
 		ID:              resp.ID,
 		Person:          person,
 		UserID:          resp.CreatorID.UUID,
-		BusinessID:      resp.BusinessID.UUID,
+		OrgID:           resp.OrgID.UUID,
 		Email:           email,
 		BirthCountry:    birthCountry,
 		DateOfBirth:     dob,

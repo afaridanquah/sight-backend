@@ -6,6 +6,7 @@ import (
 	"log/slog"
 	"time"
 
+	"bitbucket.org/msafaridanquah/verifylab-service/business/domain/otpbus/valueobject"
 	"bitbucket.org/msafaridanquah/verifylab-service/foundation/logger"
 	"bitbucket.org/msafaridanquah/verifylab-service/foundation/otel"
 	"github.com/google/uuid"
@@ -53,7 +54,12 @@ func (srv *Service) Create(ctx context.Context, custID uuid.UUID, newbus NewOTP)
 
 	expiresAt := time.Now().Add(time.Minute * 10)
 
-	code, hashed, err := generateOTPCode()
+	code, err := generateOTPCode()
+	if err != nil {
+		return OTP{}, err
+	}
+
+	hashed, err := valueobject.ParseToHashCode(code)
 	if err != nil {
 		return OTP{}, err
 	}
@@ -63,41 +69,48 @@ func (srv *Service) Create(ctx context.Context, custID uuid.UUID, newbus NewOTP)
 		Channel:     newbus.Channel,
 		Destination: newbus.Destination,
 		CustomerID:  custID,
-		HashedCode:  hashed,
+		Code:        code,
+		Hash:        hashed,
 		ExpiresAt:   expiresAt,
 	}
 
-	srv.log.Info(ctx, "otp generated",
+	defer srv.log.Info(ctx, "otp generated",
 		slog.String("customer_id", bus.CustomerID.String()),
-		slog.String("customer_id", code),
-		slog.String("customer_id", hashed.String()),
+		slog.String("code", code),
 	)
 
-	res, err := srv.repo.Add(ctx, bus)
-	if err != nil {
+	if err := srv.repo.Add(ctx, bus); err != nil {
 		return OTP{}, err
 	}
 
-	return res, nil
+	return bus, nil
 }
 
-func (srv *Service) Verify(ctx context.Context, custID uuid.UUID, newbus VerifyOTP) (OTP, error) {
+func (srv *Service) Verify(ctx context.Context, newbus VerifyOTP) (OTP, error) {
 	ctx, span := otel.AddSpan(ctx, "otpbus.VerifyOtpContent")
 	defer span.End()
 
-	res, err := srv.repo.FindByCustomerIDAndHash(ctx, custID, newbus.HashedCode)
+	hashed, err := valueobject.ParseToHashCode(newbus.Code)
+	if err != nil {
+		return OTP{}, fmt.Errorf("verify %w", err)
+	}
+
+	srv.log.Info(ctx, "verify.hashed", slog.String("hash", hashed.String()),
+		slog.String("customerID", newbus.CustomerID.String()))
+
+	res, err := srv.repo.FindByCustomerIDAndHash(ctx, newbus.CustomerID, hashed.String())
 
 	if err != nil {
 		return OTP{}, fmt.Errorf("verify %w", err)
 	}
 
-	if res.HashedCode.NotEqual(newbus.HashedCode) {
-		return OTP{}, fmt.Errorf("customer id %s :otp codes do not much", custID)
+	if res.Code != newbus.Code {
+		return OTP{}, fmt.Errorf("customer id %s :otp codes do not much", newbus.CustomerID)
 	}
 
-	if err := srv.repo.Update(ctx, res.ID, res); err != nil {
-		return OTP{}, err
-	}
+	// if err := srv.repo.Update(ctx, res.ID, res); err != nil {
+	// 	return OTP{}, err
+	// }
 
 	return res, nil
 }

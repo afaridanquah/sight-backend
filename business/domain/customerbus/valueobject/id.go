@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/oklog/ulid/v2"
+	"github.com/segmentio/ksuid"
 )
 
 var (
@@ -14,13 +14,13 @@ var (
 
 type ID struct {
 	prefix string
-	value  ulid.ULID
+	value  ksuid.KSUID
 }
 
 func NewID() ID {
 	return ID{
 		prefix: "cus",
-		value:  ulid.Make(),
+		value:  ksuid.New(),
 	}
 }
 
@@ -34,8 +34,13 @@ func ParseID(s string) (ID, error) {
 	}
 	d := strings.Split(s, "_")
 
+	k, err := ksuid.Parse(d[1])
+	if err != nil {
+		return ID{}, err
+	}
+
 	return ID{
 		prefix: d[0],
-		value:  ulid.MustParse(d[1]),
+		value:  k,
 	}, nil
 }

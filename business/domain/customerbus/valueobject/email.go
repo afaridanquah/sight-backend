@@ -64,7 +64,7 @@ func NewEmail(email string) (Email, error) {
 	if !validEmailSeq.MatchString(addr.Address) {
 		_, end, _ := strings.Cut(addr.Address, "@")
 		if !strings.Contains(end, ".") {
-			return "", errors.New("missing top-level domain, e.g. .com, .co.uk, etc.")
+			return "", errors.New("missing top-level domain, e.g. .com, .co.uk, etc")
 		}
 
 		return "", errors.New("must be an email address, e.g. email@example.com")
@@ -75,4 +75,8 @@ func NewEmail(email string) (Email, error) {
 
 func (e Email) String() string {
 	return strings.ToLower(string(e))
+}
+
+func (e *Email) IsEmpty() bool {
+	return e == nil
 }

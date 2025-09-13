@@ -1,6 +1,8 @@
 package otpbus
 
 import (
+	"crypto/rand"
+	"math/big"
 	"time"
 
 	"bitbucket.org/msafaridanquah/verifylab-service/business/domain/otpbus/valueobject"
@@ -16,7 +18,8 @@ type OTP struct {
 	SentAt      time.Time
 	ExpiresAt   time.Time
 	VerifiedAt  time.Time
-	HashedCode  valueobject.HashCode
+	Code        string
+	Hash        valueobject.HashCode
 }
 
 type NewOTP struct {
@@ -25,5 +28,23 @@ type NewOTP struct {
 }
 
 type VerifyOTP struct {
-	HashedCode valueobject.HashCode
+	CustomerID uuid.UUID
+	Code       string
+}
+
+//====================================================================================================
+
+func generateOTPCode() (string, error) {
+	const charset = "0123456789"
+	charsetLen := big.NewInt(int64(len(charset)))
+	otp := make([]byte, 6)
+	for i := range otp {
+		randInt, err := rand.Int(rand.Reader, charsetLen)
+		if err != nil {
+			return "", err
+		}
+		otp[i] = charset[randInt.Int64()]
+	}
+
+	return string(otp), nil
 }

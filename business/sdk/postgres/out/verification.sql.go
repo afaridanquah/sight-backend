@@ -22,7 +22,7 @@ type InsertVerificationParams struct {
 	VerificationType pgtype.Text
 	CustomerID       uuid.UUID
 	Customer         []byte
-	BusinessID       uuid.UUID
+	BusinessID       pgtype.Text
 	CreatorID        uuid.UUID
 	Outcome          NullOutcome
 	AmlInsight       []byte

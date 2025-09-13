@@ -6,10 +6,11 @@ import (
 
 	"bitbucket.org/msafaridanquah/verifylab-service/business/domain/verificationbus"
 	db "bitbucket.org/msafaridanquah/verifylab-service/business/sdk/postgres/out"
-	"bitbucket.org/msafaridanquah/verifylab-service/business/sdk/yenti"
 	"bitbucket.org/msafaridanquah/verifylab-service/foundation/vaulti"
 	"github.com/jackc/pgx/v5/pgtype"
 )
+
+const vaultKey = "pii_key"
 
 type Customer struct {
 	ID              string           `json:"id"`
@@ -26,8 +27,8 @@ type Customer struct {
 }
 
 type AmlInsight struct {
-	Outcome    string              `json:"outcome"`
-	EntityHits yenti.YentiResponse `json:"entity_hits"`
+	Outcome    string        `json:"outcome"`
+	EntityHits YentiResponse `json:"responses"`
 }
 
 type Address struct {
@@ -67,7 +68,7 @@ func toDBInsertVerification(bus verificationbus.Verification, vaulti *vaulti.Vau
 			nationality := v.Nationality.Alpha2()
 			issuedCountry := v.CountryIssued.Alpha2()
 			expDate := v.ExpDate.Format(time.DateOnly)
-			pin, err := vaulti.TransitEncrypt(v.Pin)
+			pin, err := vaulti.TransitEncrypt(v.Pin, vaultKey)
 			if err != nil {
 				return db.InsertVerificationParams{}, err
 			}
@@ -91,9 +92,20 @@ func toDBInsertVerification(bus verificationbus.Verification, vaulti *vaulti.Vau
 		return db.InsertVerificationParams{}, err
 	}
 
+	yentiJson, err := json.Marshal(bus.AmlInsight.EntityHits)
+	if err != nil {
+		return db.InsertVerificationParams{}, err
+	}
+
+	var yentiResponse YentiResponse
+	if err := json.Unmarshal(yentiJson, &yentiResponse); err != nil {
+		return db.InsertVerificationParams{}, err
+
+	}
+
 	amlInsight := AmlInsight{
 		Outcome:    bus.AmlInsight.Outcome.String(),
-		EntityHits: bus.AmlInsight.EntityHits,
+		EntityHits: yentiResponse,
 	}
 
 	amlInsightJson, err := json.Marshal(amlInsight)
@@ -135,19 +147,16 @@ type ResponseProperty struct {
 		Properties struct {
 			Name []string `json:"name"`
 		} `json:"properties"`
-		Datasets   []string  `json:"datasets"`
-		Referents  []string  `json:"referents"`
-		Target     bool      `json:"target"`
-		FirstSeen  time.Time `json:"first_seen"`
-		LastSeen   time.Time `json:"last_seen"`
-		LastChange time.Time `json:"last_change"`
-		Score      float64   `json:"score"`
-		Features   struct {
-			Property1 int `json:"property1"`
-			Property2 int `json:"property2"`
-		} `json:"features"`
-		Match bool   `json:"match"`
-		Token string `json:"token"`
+		Datasets   []string       `json:"datasets"`
+		Referents  []string       `json:"referents"`
+		Target     bool           `json:"target"`
+		FirstSeen  string         `json:"first_seen"`
+		LastSeen   string         `json:"last_seen"`
+		LastChange string         `json:"last_change"`
+		Score      float64        `json:"score"`
+		Features   map[string]any `json:"features"`
+		Match      bool           `json:"match"`
+		Token      string         `json:"token"`
 	} `json:"results"`
 	Total struct {
 		Value    int    `json:"value"`
@@ -163,7 +172,7 @@ type ResponseProperty struct {
 }
 
 type YentiResponse struct {
-	Properties map[string]ResponseProperty `json:"properties"`
-	// Matcher    map[string]ResponsePropertyMatcher `json:"matcher"`
-	// Limit      int                                `json:"limit"`
+	Properties map[string]ResponseProperty        `json:"responses"`
+	Matcher    map[string]ResponsePropertyMatcher `json:"matcher"`
+	Limit      int                                `json:"limit"`
 }

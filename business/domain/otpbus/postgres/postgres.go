@@ -2,36 +2,46 @@ package postgres
 
 import (
 	"context"
+	"fmt"
 
 	"bitbucket.org/msafaridanquah/verifylab-service/business/domain/otpbus"
-	"bitbucket.org/msafaridanquah/verifylab-service/business/domain/otpbus/valueobject"
 	db "bitbucket.org/msafaridanquah/verifylab-service/business/sdk/postgres/out"
 	"bitbucket.org/msafaridanquah/verifylab-service/foundation/otel"
+	"bitbucket.org/msafaridanquah/verifylab-service/foundation/vaulti"
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/jackc/pgx/v5/pgxpool"
 	semconv "go.opentelemetry.io/otel/semconv/v1.26.0"
 )
 
+const vaultKey = "pii_key"
+
 type Repository struct {
 	queries *db.Queries
 	conn    *pgxpool.Pool
+	vaulti  *vaulti.Vaulty
 }
 
-func New(d db.DBTX, conn *pgxpool.Pool) *Repository {
+func New(d db.DBTX, conn *pgxpool.Pool, vault *vaulti.Vaulty) *Repository {
 	return &Repository{
 		conn:    conn,
 		queries: db.New(d),
+		vaulti:  vault,
 	}
 }
 
-func (repo *Repository) Add(ctx context.Context, bus otpbus.OTP) (otpbus.OTP, error) {
+func (repo *Repository) Add(ctx context.Context, bus otpbus.OTP) error {
 	ctx, span := otel.AddSpan(ctx, "otpbus.postgres.Add")
 	span.SetAttributes(semconv.DBSystemPostgreSQL)
 
 	defer span.End()
 
-	_, err := repo.queries.InsertOTP(ctx, db.InsertOTPParams{
+	pin, err := repo.vaulti.TransitEncrypt(bus.Code, vaultKey)
+	if err != nil {
+		return err
+	}
+
+	if err := repo.queries.InsertOTP(ctx, db.InsertOTPParams{
 		ID: uuid.NullUUID{
 			UUID:  bus.ID,
 			Valid: true,
@@ -41,7 +51,11 @@ func (repo *Repository) Add(ctx context.Context, bus otpbus.OTP) (otpbus.OTP, er
 			Valid: true,
 		},
 		HashedCode: pgtype.Text{
-			String: bus.HashedCode.String(),
+			String: bus.Hash.String(),
+			Valid:  true,
+		},
+		Code: pgtype.Text{
+			String: pin.Ciphertext,
 			Valid:  true,
 		},
 		Channel: db.NullChannel{
@@ -53,41 +67,46 @@ func (repo *Repository) Add(ctx context.Context, bus otpbus.OTP) (otpbus.OTP, er
 			Valid: true,
 		},
 		Destination: bus.Destination,
-	})
-
-	if err != nil {
-		return otpbus.OTP{}, err
+	}); err != nil {
+		return err
 	}
 
-	return bus, nil
+	return nil
 }
 
-func (repo *Repository) Find(ctx context.Context, id uuid.UUID) (otpbus.OTP, error) {
-	ctx, span := otel.AddSpan(ctx, "otpbus.postgres.Find")
+func (repo *Repository) FindByCustomerIDAndHash(ctx context.Context, id uuid.UUID, hashed string) (otpbus.OTP, error) {
+	ctx, span := otel.AddSpan(ctx, "otpbus.postgres.findbycustomeridandhash")
 	span.SetAttributes(semconv.DBSystemPostgreSQL)
 
 	defer span.End()
 
-	res, err := repo.queries.GetOTP(ctx, uuid.NullUUID{
-		UUID:  id,
-		Valid: true,
+	res, err := repo.queries.GetOTPByCustomerIDAndCode(ctx, db.GetOTPByCustomerIDAndCodeParams{
+		CustomerID: uuid.NullUUID{
+			UUID:  id,
+			Valid: true,
+		},
+		HashedCode: pgtype.Text{
+			String: hashed,
+			Valid:  true,
+		},
 	})
-
 	if err != nil {
 		return otpbus.OTP{}, err
 	}
-	channel, err := valueobject.ParseChannel(string(res.Channel.Channel))
+
+	fmt.Printf("code from db %s", res.Code.String)
+
+	rawcode, err := repo.vaulti.TransitDecrypt(res.Code.String, vaultKey)
 	if err != nil {
 		return otpbus.OTP{}, err
 	}
 
 	bus := otpbus.OTP{
-		ID:          res.ID.UUID,
-		Channel:     channel,
-		CustomerID:  res.CustomerID.UUID,
-		Destination: res.Destination,
-		VerifiedAt:  res.VerifiedAt.Time,
-		ExpiresAt:   res.VerifiedAt.Time,
+		ID:         res.ID.UUID,
+		Code:       rawcode.Plaintext,
+		CustomerID: res.CustomerID.UUID,
+		VerifiedAt: res.VerifiedAt.Time,
+		ExpiresAt:  res.VerifiedAt.Time,
 	}
 
 	return bus, nil

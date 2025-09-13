@@ -1,6 +1,6 @@
 services:
-  verifylab:
-    container_name: verifylab
+  sight:
+    container_name: sight
     working_dir: /app
     env_file:
       - env.example
@@ -18,7 +18,7 @@ services:
       - jaeger
       - vault
     networks:
-      - verifylab
+      - sight
 
   postgres:
     image: postgres
@@ -39,7 +39,7 @@ services:
     volumes:
       - ./ops/db/migrations/:/db/
     networks:
-      - verifylab
+      - sight
 
   vault:
     image: hashicorp/vault
@@ -51,7 +51,7 @@ services:
       VAULT_DEV_LISTEN_ADDRESS: "0.0.0.0:8300"
       VAULT_DEV_ROOT_TOKEN_ID: "myroot"
     networks:
-      - verifylab
+      - sight
 
   jaeger:
     image: jaegertracing/jaeger:2.3.0
@@ -65,7 +65,7 @@ services:
       - "4318:4318"
       - "9411:9411"
     networks:
-      - verifylab
+      - sight
 
   index:
     image: docker.elastic.co/elasticsearch/elasticsearch:8.14.3
@@ -93,7 +93,7 @@ services:
       restart_policy:
         condition: on-failure
     networks:
-      - verifylab
+      - sight
 
   app:
     image: ghcr.io/opensanctions/yente:4.4.0
@@ -122,17 +122,17 @@ services:
         max_attempts: 3
         window: 120s
     networks:
-      - verifylab
+      - sight
 
   prometheus:
     image: prom/prometheus
     ports:
       - "9090:9090"
     networks:
-      - verifylab
+      - sight
 
 networks:
-  verifylab:
+  sight:
     driver: bridge
 
 volumes:

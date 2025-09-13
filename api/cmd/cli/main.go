@@ -7,8 +7,6 @@ import (
 	"os"
 	"runtime"
 
-	"bitbucket.org/msafaridanquah/verifylab-service/api/cmd/cli/command"
-	"bitbucket.org/msafaridanquah/verifylab-service/app/sdk"
 	"bitbucket.org/msafaridanquah/verifylab-service/foundation/envvar"
 	"bitbucket.org/msafaridanquah/verifylab-service/foundation/logger"
 	"bitbucket.org/msafaridanquah/verifylab-service/foundation/otel"
@@ -53,44 +51,13 @@ func run(ctx context.Context, env string, log *logger.Logger) error {
 		return fmt.Errorf("load envvar %w", err)
 	}
 
-	vault, err := sdk.NewVaultProvider()
-	if err != nil {
-		return fmt.Errorf("new vault provider %w", err)
-	}
+	// vault, err := sdk.NewVaultProvider()
+	// if err != nil {
+	// 	return fmt.Errorf("new vault provider %w", err)
+	// }
 
-	conf := envvar.New(vault)
-
-	var tempo otel.Config
-
-	jaegerEndpoint, _ := conf.Get("JAEGER_ENDPOINT")
-
-	tempo = otel.Config{
-		Host:        jaegerEndpoint,
-		ServiceName: serviceName,
-		Probability: 0.05,
-		ExcludedRoutes: map[string]struct{}{
-			"/v1/liveness":  {},
-			"/v1/readiness": {},
-		},
-	}
-
-	traceProvider, _, err := otel.InitTracing(log, tempo)
-	tracer := traceProvider.Tracer(tempo.ServiceName)
-	if err != nil {
-		return fmt.Errorf("init tracing: %w", err)
-	}
-
-	pool, err := sdk.NewPostgreSQL(conf)
-	if err != nil {
-		return fmt.Errorf("new postgres sql %w", err)
-	}
-
-	config := command.Config{
-		Name:       "test",
-		PostgresDB: pool,
-		Tracer:     tracer,
-	}
-
-	command.New(config)
+	// // conf := envvar.New(vault)
+	//
 	return nil
+
 }

@@ -45,7 +45,7 @@ func InitTracing(log *logger.Logger, cfg Config) (*sdktrace.TracerProvider, func
 	// var traceProvider *trace.TracerProvider
 
 	tp := sdktrace.NewTracerProvider(
-		sdktrace.WithSampler(sdktrace.AlwaysSample()),
+		// sdktrace.WithSampler(sdktrace.AlwaysSample()),
 		sdktrace.WithBatcher(exporter,
 			sdktrace.WithMaxExportBatchSize(sdktrace.DefaultMaxExportBatchSize),
 			sdktrace.WithBatchTimeout(sdktrace.DefaultScheduleDelay*time.Millisecond),

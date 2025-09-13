@@ -19,7 +19,6 @@ type Config struct {
 type Vaulty struct {
 	client *vault.Client
 	log    *logger.Logger
-	key    string
 }
 
 type TransitResponse struct {
@@ -59,13 +58,12 @@ func InitVault(conf Config) (*Vaulty, error) {
 	return &Vaulty{
 		client: client,
 		log:    conf.Log,
-		key:    conf.KeyName,
 	}, nil
 }
 
-func (v *Vaulty) TransitEncrypt(data string) (TransitResponse, error) {
+func (v *Vaulty) TransitEncrypt(data string, key string) (TransitResponse, error) {
 	tob64 := base64.StdEncoding.EncodeToString([]byte(data))
-	res, err := v.client.Secrets.TransitEncrypt(context.Background(), v.key, schema.TransitEncryptRequest{
+	res, err := v.client.Secrets.TransitEncrypt(context.Background(), key, schema.TransitEncryptRequest{
 		Plaintext: tob64,
 	})
 	if err != nil {
@@ -86,26 +84,29 @@ func (v *Vaulty) TransitEncrypt(data string) (TransitResponse, error) {
 	return transitResponse, nil
 }
 
-func (v *Vaulty) TransitDecrypt(ciphertext string) (TransitResponse, error) {
-	res, err := v.client.Secrets.TransitDecrypt(context.Background(), v.key, schema.TransitDecryptRequest{
+func (v *Vaulty) TransitDecrypt(ciphertext string, key string) (TransitResponse, error) {
+	res, err := v.client.Secrets.TransitDecrypt(context.Background(), key, schema.TransitDecryptRequest{
 		Ciphertext: ciphertext,
 	})
 	if err != nil {
 		return TransitResponse{}, err
 	}
 
-	var transitResponse TransitResponse
-
 	bytes, err := json.Marshal(res.Data)
 	if err != nil {
 		return TransitResponse{}, err
 	}
 
+	var transitResponse TransitResponse
 	if err := json.Unmarshal(bytes, &transitResponse); err != nil {
 		return TransitResponse{}, err
 	}
 
-	decoded, err := base64.StdEncoding.DecodeString(string(transitResponse.Plaintext))
+	decoded, err := base64.StdEncoding.DecodeString(transitResponse.Plaintext)
+	if err != nil {
+		return TransitResponse{}, err
+	}
+
 	if err := json.Unmarshal(bytes, &transitResponse); err != nil {
 		return TransitResponse{}, err
 	}

@@ -66,18 +66,15 @@ func (srv *Service) Create(ctx context.Context, newbus NewVerification) (Verific
 		UpdatedAt:        now,
 	}
 
-	srv.log.Info(ctx, "bus create verification", verification.Customer)
-
 	yentiClient, err := yenti.New(yenti.Config{
 		Env: srv.envvar,
 		Log: srv.log,
 	})
-
 	if err != nil {
 		return Verification{}, err
 	}
 
-	if err := verification.OpenSanctionMatch(yentiClient); err != nil {
+	if err := verification.OpenSanctionMatch(ctx, yentiClient); err != nil {
 		return Verification{}, err
 	}
 

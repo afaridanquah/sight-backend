@@ -33,7 +33,7 @@ func (d DateOfBirth) String() string {
 }
 
 func ParseDateOfBirth(d time.Time) (DateOfBirth, error) {
-	if d == (time.Time{}) {
+	if d.IsZero() {
 		return DateOfBirth{}, ErrDateNotValidBeEmpty
 	}
 

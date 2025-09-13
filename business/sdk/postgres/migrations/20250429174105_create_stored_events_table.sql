@@ -2,7 +2,7 @@
 -- +goose StatementBegin
 CREATE TABLE stored_events (
     id UUID,
-    type VARCHAR(50),
+    type VARCHAR(55),
     aggregate_id UUID,
     aggregate_type TEXT,
     aggregate_version BIGINT,

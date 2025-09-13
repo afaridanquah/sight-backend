@@ -1,22 +1,40 @@
 package valueobject
 
-import "fmt"
+import (
+	"fmt"
+
+	"github.com/google/uuid"
+)
 
 type Business struct {
-	Name   string
-	Status string
+	ID                 uuid.UUID
+	Name               string
+	Country            Country
+	RegistrationNumber string
 }
 
-func NewBusiness(name, status string) (Business, error) {
+func NewBusiness(id uuid.UUID, name string, c *string, regNumber *string) (Business, error) {
 	if name == "" {
 		return Business{}, fmt.Errorf("business name is required")
 	}
-	if status == "" {
-		return Business{}, fmt.Errorf("business status is required")
+
+	bus := Business{
+		ID:   id,
+		Name: name,
 	}
 
-	return Business{
-		Name:   name,
-		Status: status,
-	}, nil
+	if c != nil {
+		country, err := NewCountry(*c)
+		if err != nil {
+			return Business{}, err
+		}
+		bus.Country = country
+	}
+
+	if regNumber != nil {
+		bus.RegistrationNumber = *regNumber
+	}
+
+	return bus, nil
+
 }

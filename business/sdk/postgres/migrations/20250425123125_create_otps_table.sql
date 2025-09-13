@@ -6,6 +6,7 @@ CREATE TABLE otps (
     id UUID,
     customer_id UUID,
     hashed_code TEXT,
+    code TEXT,
     channel channel,
     expires_at TIMESTAMP,
     verified_at TIMESTAMP,

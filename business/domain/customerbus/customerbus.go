@@ -17,7 +17,7 @@ type Customer struct {
 	ID              uuid.UUID
 	Person          valueobject.Person
 	UserID          uuid.UUID
-	BusinessID      uuid.UUID
+	OrgID           uuid.UUID
 	DateOfBirth     valueobject.DateOfBirth
 	CityOfBirth     string
 	Identifications []valueobject.Identification
@@ -41,10 +41,10 @@ type NewCustomer struct {
 }
 
 type UpdateCustomer struct {
-	Person          valueobject.Person
-	BirthCountry    valueobject.Country
-	DateOfBirth     valueobject.DateOfBirth
-	Email           valueobject.Email
-	Addresses       valueobject.Address
-	Identifications []valueobject.Identification
+	Person          *valueobject.Person
+	BirthCountry    *valueobject.Country
+	DateOfBirth     *valueobject.DateOfBirth
+	Email           *valueobject.Email
+	Address         *valueobject.Address
+	Identifications *[]valueobject.Identification
 }

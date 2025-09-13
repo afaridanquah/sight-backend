@@ -17,7 +17,7 @@ func NewVaultProvider() (*vault.Provider, error) {
 
 	provider, err := vault.New(vaultToken, vaultAddress, vaultPath)
 	if err != nil {
-		return nil, ierr.WrapErrorf(err, ierr.ErrorCodeUnknown, "vault.New")
+		return nil, ierr.WrapErrorf(err, ierr.InvalidArgument, "vault.New")
 	}
 
 	return provider, nil

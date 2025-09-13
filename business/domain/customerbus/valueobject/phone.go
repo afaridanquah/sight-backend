@@ -92,3 +92,7 @@ func (p Phone) IsZero() bool {
 	}
 	return false
 }
+
+func (p *Phone) IsEmpty() bool {
+	return p == nil
+}

@@ -42,6 +42,6 @@ func New(repo Repository, logger *logger.Logger, cfgs ...ServiceConfig) (*Servic
 	return ser, nil
 }
 
-func (srv *Service) Create(ctx context.Context, ni NewIdentification) (Identification, error) {
-	// ctx, span := otel.AddSpan(ctx, "id")
+func (srv *Service) Create(ctx context.Context, napp NewIdentification) (Identification, error) {
+
 }

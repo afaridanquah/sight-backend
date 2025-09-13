@@ -1,6 +1,10 @@
 package command
 
-import "github.com/spf13/cobra"
+import (
+	"fmt"
+
+	"github.com/spf13/cobra"
+)
 
 var uploadCmd = &cobra.Command{
 	Use:   "upload",
@@ -9,6 +13,6 @@ var uploadCmd = &cobra.Command{
 	Pass flags to the program you are debugging using ` + "`--`" + `
 	`,
 	Run: func(cmd *cobra.Command, args []string) {
-		// Do Stuff Here
+		fmt.Println("Hugo Static Site Generator v0.9 -- HEAD")
 	},
 }

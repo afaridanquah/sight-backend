@@ -25,8 +25,8 @@ type Verification struct {
 }
 
 type AmlInsight struct {
-	Outcome    string                    `json:"outcome"`
-	EntityHits map[string]EntityProperty `json:"properties"`
+	Outcome    string        `json:"outcome"`
+	EntityHits YentiResponse `json:"entity_hits"`
 }
 
 type PhoneInsight struct {
@@ -35,6 +35,10 @@ type PhoneInsight struct {
 	PhoneType           string `json:"phone_type"`
 	Country             string `json:"country"`
 	NationalFormat      string `json:"national_format"`
+}
+
+type YentiResponse struct {
+	Properties map[string]EntityProperty `json:"responses"`
 }
 
 type EntityProperty struct {
@@ -46,19 +50,16 @@ type EntityProperty struct {
 		Properties struct {
 			Name []string `json:"name"`
 		} `json:"properties"`
-		Datasets   []string  `json:"datasets"`
-		Referents  []string  `json:"referents"`
-		Target     bool      `json:"target"`
-		FirstSeen  time.Time `json:"first_seen"`
-		LastSeen   time.Time `json:"last_seen"`
-		LastChange time.Time `json:"last_change"`
-		Score      float64   `json:"score"`
-		Features   struct {
-			Property1 int `json:"property1"`
-			Property2 int `json:"property2"`
-		} `json:"features"`
-		Match bool   `json:"match"`
-		Token string `json:"token"`
+		Datasets   []string       `json:"datasets"`
+		Referents  []string       `json:"referents"`
+		Target     bool           `json:"target"`
+		FirstSeen  string         `json:"first_seen"`
+		LastSeen   string         `json:"last_seen"`
+		LastChange string         `json:"last_change"`
+		Score      float64        `json:"score"`
+		Features   map[string]any `json:"features"`
+		Match      bool           `json:"match"`
+		Token      string         `json:"token"`
 	} `json:"results"`
 	Total struct {
 		Value    int    `json:"value"`
@@ -101,7 +102,8 @@ type Business struct {
 }
 
 type NewVerification struct {
-	CustomerID       string `json:"customer_id" validate:"required"`
+	BusinessID       string `json:"business_id" validate:"required_if=CustomerID ''"`
+	CustomerID       string `json:"customer_id" validate:"required_if=BusinessID ''"`
 	VerificationType string `json:"verification_type" validate:"required"`
 }
 
@@ -113,7 +115,7 @@ func (o NewVerification) Validate() error {
 	return nil
 }
 
-func toBusNewVerification(napp NewVerification, customer valueobject.Customer) (verificationbus.NewVerification, error) {
+func toBusNewCustomerVerification(napp NewVerification, customer valueobject.Customer) (verificationbus.NewVerification, error) {
 	verificationType, err := valueobject.ParseVerificationType(napp.VerificationType)
 	if err != nil {
 		return verificationbus.NewVerification{}, err
@@ -123,6 +125,19 @@ func toBusNewVerification(napp NewVerification, customer valueobject.Customer) (
 		VerificationType: verificationType,
 		CustomerID:       customer.ID,
 		Customer:         customer,
+	}, nil
+}
+
+func toBusNewBusinessVerification(napp NewVerification, business valueobject.Business) (verificationbus.NewVerification, error) {
+	verificationType, err := valueobject.ParseVerificationType(napp.VerificationType)
+	if err != nil {
+		return verificationbus.NewVerification{}, err
+	}
+
+	return verificationbus.NewVerification{
+		VerificationType: verificationType,
+		BusinessID:       business.ID,
+		Business:         business,
 	}, nil
 }
 
@@ -143,17 +158,17 @@ func toAppVerification(vbus verificationbus.Verification) Verification {
 	if vbus.VerificationType.String() == "AML_SCREENING" {
 		marshHits, err := json.Marshal(vbus.AmlInsight.EntityHits)
 		if err != nil {
-			fmt.Printf("aml entityies %v", marshHits)
+			fmt.Printf("aml entityies %s", marshHits)
 		}
 
-		// var unmarshedHits EntityProperty
+		var yentiResponse YentiResponse
 
-		// if err := json.Unmarshal(marshHits, &unmarshedHits); err != nil {
-		// 	fmt.Printf("aml entityies %v", err)
-		// }
+		if err := json.Unmarshal(marshHits, &yentiResponse); err != nil {
+			fmt.Printf("aml entityies %v", err)
+		}
 
-		// amlInsight.EntityHits = unmarshedHits
-		// amlInsight.Outcome = "CLEARED"
+		amlInsight.EntityHits = yentiResponse
+		amlInsight.Outcome = "CLEARED"
 	}
 
 	return Verification{
@@ -189,6 +204,9 @@ func toBusVoCustomer(customer customerbus.Customer) (valueobject.Customer, error
 	}
 
 	countryOfBirth, err := valueobject.NewCountry(customer.BirthCountry.Alpha2())
+	if err != nil {
+		return valueobject.Customer{}, err
+	}
 
 	customerIdentifications := make([]valueobject.Identification, len(customer.Identifications))
 	if len(customer.Identifications) > 0 {

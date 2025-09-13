@@ -13,7 +13,7 @@ import (
 )
 
 const GetOTP = `-- name: GetOTP :one
-SELECT id, customer_id, destination, channel, hashed_code, verified_at, expires_at, created_at, updated_at
+SELECT id, customer_id, destination, channel, code, verified_at, expires_at, created_at, updated_at
 FROM otps
 WHERE id = $1
 `
@@ -23,7 +23,7 @@ type GetOTPRow struct {
 	CustomerID  uuid.NullUUID
 	Destination string
 	Channel     NullChannel
-	HashedCode  pgtype.Text
+	Code        pgtype.Text
 	VerifiedAt  pgtype.Timestamp
 	ExpiresAt   pgtype.Timestamp
 	CreatedAt   pgtype.Timestamp
@@ -38,7 +38,7 @@ func (q *Queries) GetOTP(ctx context.Context, id uuid.NullUUID) (GetOTPRow, erro
 		&i.CustomerID,
 		&i.Destination,
 		&i.Channel,
-		&i.HashedCode,
+		&i.Code,
 		&i.VerifiedAt,
 		&i.ExpiresAt,
 		&i.CreatedAt,
@@ -47,39 +47,37 @@ func (q *Queries) GetOTP(ctx context.Context, id uuid.NullUUID) (GetOTPRow, erro
 	return i, err
 }
 
-const GetOTPByCustomerIDAndHash = `-- name: GetOTPByCustomerIDAndHash :one
-SELECT id, customer_id, destination, channel, hashed_code, verified_at, expires_at, created_at, updated_at
+const GetOTPByCustomerIDAndCode = `-- name: GetOTPByCustomerIDAndCode :one
+SELECT id, customer_id, hashed_code, code, verified_at, expires_at, created_at, updated_at
 FROM otps
 WHERE customer_id = $1
 AND hashed_code = $2
 `
 
-type GetOTPByCustomerIDAndHashParams struct {
+type GetOTPByCustomerIDAndCodeParams struct {
 	CustomerID uuid.NullUUID
 	HashedCode pgtype.Text
 }
 
-type GetOTPByCustomerIDAndHashRow struct {
-	ID          uuid.NullUUID
-	CustomerID  uuid.NullUUID
-	Destination string
-	Channel     NullChannel
-	HashedCode  pgtype.Text
-	VerifiedAt  pgtype.Timestamp
-	ExpiresAt   pgtype.Timestamp
-	CreatedAt   pgtype.Timestamp
-	UpdatedAt   pgtype.Timestamp
+type GetOTPByCustomerIDAndCodeRow struct {
+	ID         uuid.NullUUID
+	CustomerID uuid.NullUUID
+	HashedCode pgtype.Text
+	Code       pgtype.Text
+	VerifiedAt pgtype.Timestamp
+	ExpiresAt  pgtype.Timestamp
+	CreatedAt  pgtype.Timestamp
+	UpdatedAt  pgtype.Timestamp
 }
 
-func (q *Queries) GetOTPByCustomerIDAndHash(ctx context.Context, arg GetOTPByCustomerIDAndHashParams) (GetOTPByCustomerIDAndHashRow, error) {
-	row := q.db.QueryRow(ctx, GetOTPByCustomerIDAndHash, arg.CustomerID, arg.HashedCode)
-	var i GetOTPByCustomerIDAndHashRow
+func (q *Queries) GetOTPByCustomerIDAndCode(ctx context.Context, arg GetOTPByCustomerIDAndCodeParams) (GetOTPByCustomerIDAndCodeRow, error) {
+	row := q.db.QueryRow(ctx, GetOTPByCustomerIDAndCode, arg.CustomerID, arg.HashedCode)
+	var i GetOTPByCustomerIDAndCodeRow
 	err := row.Scan(
 		&i.ID,
 		&i.CustomerID,
-		&i.Destination,
-		&i.Channel,
 		&i.HashedCode,
+		&i.Code,
 		&i.VerifiedAt,
 		&i.ExpiresAt,
 		&i.CreatedAt,
@@ -88,57 +86,30 @@ func (q *Queries) GetOTPByCustomerIDAndHash(ctx context.Context, arg GetOTPByCus
 	return i, err
 }
 
-const InsertOTP = `-- name: InsertOTP :one
-INSERT INTO otps(id, customer_id, hashed_code, expires_at, channel, destination)
-VALUES($1, $2, $3, $4, $5, $6)
-RETURNING id, customer_id, hashed_code, channel, expires_at, verified_at, destination, created_at, updated_at
+const InsertOTP = `-- name: InsertOTP :exec
+INSERT INTO otps(id, customer_id, hashed_code, code, expires_at, channel, destination)
+VALUES($1, $2, $3, $4, $5, $6, $7)
 `
 
 type InsertOTPParams struct {
 	ID          uuid.NullUUID
 	CustomerID  uuid.NullUUID
 	HashedCode  pgtype.Text
+	Code        pgtype.Text
 	ExpiresAt   pgtype.Timestamp
 	Channel     NullChannel
 	Destination string
 }
 
-func (q *Queries) InsertOTP(ctx context.Context, arg InsertOTPParams) (Otps, error) {
-	row := q.db.QueryRow(ctx, InsertOTP,
+func (q *Queries) InsertOTP(ctx context.Context, arg InsertOTPParams) error {
+	_, err := q.db.Exec(ctx, InsertOTP,
 		arg.ID,
 		arg.CustomerID,
 		arg.HashedCode,
+		arg.Code,
 		arg.ExpiresAt,
 		arg.Channel,
 		arg.Destination,
 	)
-	var i Otps
-	err := row.Scan(
-		&i.ID,
-		&i.CustomerID,
-		&i.HashedCode,
-		&i.Channel,
-		&i.ExpiresAt,
-		&i.VerifiedAt,
-		&i.Destination,
-		&i.CreatedAt,
-		&i.UpdatedAt,
-	)
-	return i, err
-}
-
-const UpdateOTP = `-- name: UpdateOTP :exec
-UPDATE otps 
-SET verified_at = NOW() 
-WHERE customer_id = $1 AND hashed_code = $2
-`
-
-type UpdateOTPParams struct {
-	CustomerID uuid.NullUUID
-	HashedCode pgtype.Text
-}
-
-func (q *Queries) UpdateOTP(ctx context.Context, arg UpdateOTPParams) error {
-	_, err := q.db.Exec(ctx, UpdateOTP, arg.CustomerID, arg.HashedCode)
 	return err
 }

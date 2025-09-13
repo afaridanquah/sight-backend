@@ -4,8 +4,10 @@ import (
 	"encoding/json"
 	"net/http"
 
+	"bitbucket.org/msafaridanquah/verifylab-service/business/domain/businessbus"
 	"bitbucket.org/msafaridanquah/verifylab-service/business/domain/customerbus"
 	"bitbucket.org/msafaridanquah/verifylab-service/business/domain/verificationbus"
+	verbus_vo "bitbucket.org/msafaridanquah/verifylab-service/business/domain/verificationbus/valueobject"
 	"bitbucket.org/msafaridanquah/verifylab-service/foundation/ierr"
 	"bitbucket.org/msafaridanquah/verifylab-service/foundation/logger"
 	"bitbucket.org/msafaridanquah/verifylab-service/foundation/web"
@@ -14,6 +16,7 @@ import (
 
 type App struct {
 	customerService    *customerbus.Service
+	businessService    *businessbus.Service
 	verficationService *verificationbus.Service
 	log                *logger.Logger
 }
@@ -28,48 +31,95 @@ func newApp(vs *verificationbus.Service, cs *customerbus.Service, log *logger.Lo
 
 func (app *App) screen(w http.ResponseWriter, r *http.Request) {
 	var napp NewVerification
+	var ctx = r.Context()
 	if err := json.NewDecoder(r.Body).Decode(&napp); err != nil {
-		web.RenderErrorResponse(w, r, "invalid request",
-			ierr.WrapErrorf(err, ierr.ErrorCodeInvalidArgument, "json decoder"))
+		web.RenderErrorResponse(ctx, w, r, "invalid request",
+			ierr.WrapErrorf(err, ierr.InvalidArgument, "json decoder"))
 		return
 	}
 
-	defer r.Body.Close()
+	defer func() {
+		_ = r.Body.Close()
+	}()
 
 	if err := napp.Validate(); err != nil {
-		app.log.Error(r.Context(), "verificationapp.validate", err)
-		web.RenderErrorResponse(w, r, "validation", ierr.WrapErrorf(err, ierr.ErrorCodeInvalidArgument, "json decoder"))
+		app.log.Error(ctx, "validation", err)
+		web.RenderErrorResponse(ctx, w, r, "validation", ierr.WrapErrorf(err, ierr.InvalidArgument, "json decoder"))
 		return
 	}
 
-	parsedCustomerID, err := uuid.Parse(napp.CustomerID)
-	if err != nil {
-		web.RenderErrorResponse(w, r, "parse uuid", err)
+	switch {
+	case napp.CustomerID != "":
+		parsedCustomerID, err := uuid.Parse(napp.CustomerID)
+		if err != nil {
+			app.log.Error(ctx, "parse", err)
+			web.RenderErrorResponse(ctx, w, r, "parse uuid", err)
+			return
+		}
+
+		customer, err := app.customerService.FindByIDAndOrgID(r.Context(), parsedCustomerID)
+		if err != nil {
+			app.log.Error(ctx, "customerservice.findbyidandorgid", err)
+			web.RenderErrorResponse(ctx, w, r, "customer not found", ierr.WrapErrorf(err, ierr.NotFound, ""))
+			return
+		}
+
+		c, err := toBusVoCustomer(customer)
+		if err != nil {
+			app.log.Error(ctx, "tobusvocustomer", err)
+			web.RenderErrorResponse(ctx, w, r, "tobusvocustomer", err)
+			return
+		}
+
+		newbus, err := toBusNewCustomerVerification(napp, c)
+		if err != nil {
+			web.RenderErrorResponse(ctx, w, r, "customer not found", err)
+		}
+
+		vbus, err := app.verficationService.Create(r.Context(), newbus)
+		if err != nil {
+			web.RenderErrorResponse(ctx, w, r, "bus service create", err)
+		}
+		vapp := toAppVerification(vbus)
+		web.RenderResponse(http.StatusOK, w, r, vapp)
+		return
+
+	case napp.BusinessID != "":
+		parsedBusinessID, err := uuid.Parse(napp.BusinessID)
+		if err != nil {
+			app.log.Error(ctx, "parse", err)
+			web.RenderErrorResponse(ctx, w, r, "parse uuid", err)
+			return
+		}
+
+		business, err := app.businessService.FindByID(r.Context(), parsedBusinessID)
+		if err != nil {
+			app.log.Error(ctx, "businessService.findbyid", err)
+			web.RenderErrorResponse(ctx, w, r, "business not found", ierr.WrapErrorf(err, ierr.NotFound, ""))
+			return
+		}
+
+		countryCode := business.CountryOfIncorporation.Alpha2()
+		b, err := verbus_vo.NewBusiness(business.ID, business.LegalName, &countryCode, &business.RegistrationNumber)
+		if err != nil {
+			web.RenderErrorResponse(ctx, w, r, "newbusiness", err)
+			return
+		}
+
+		newbus, err := toBusNewBusinessVerification(napp, b)
+		if err != nil {
+			web.RenderErrorResponse(ctx, w, r, "tobusnewbusinessverification", err)
+		}
+
+		vbus, err := app.verficationService.Create(r.Context(), newbus)
+		if err != nil {
+			web.RenderErrorResponse(ctx, w, r, "verficationservice.create", err)
+		}
+		vapp := toAppVerification(vbus)
+		web.RenderResponse(http.StatusOK, w, r, vapp)
+		return
+
+	default:
+		return
 	}
-
-	customer, err := app.customerService.QueryByIDAndBusinessID(r.Context(), parsedCustomerID)
-	if err != nil {
-		web.RenderErrorResponse(w, r, "customer not found", err)
-	}
-
-	voCustomer, err := toBusVoCustomer(customer)
-	if err != nil {
-		web.RenderErrorResponse(w, r, "tobusvocustomer", err)
-	}
-
-	newbus, err := toBusNewVerification(napp, voCustomer)
-	if err != nil {
-		app.log.Error(r.Context(), "tobusnewverification", err)
-		web.RenderErrorResponse(w, r, "customer not found", err)
-	}
-
-	vbus, err := app.verficationService.Create(r.Context(), newbus)
-	if err != nil {
-		app.log.Error(r.Context(), "Create", err)
-		web.RenderErrorResponse(w, r, "bus service create", err)
-	}
-
-	vapp := toAppVerification(vbus)
-
-	web.RenderResponse(w, r, vapp, http.StatusOK)
 }

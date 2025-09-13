@@ -97,6 +97,94 @@ func (ns NullDecision) Value() (driver.Value, error) {
 	return string(ns.Decision), nil
 }
 
+type DocumentStatus string
+
+const (
+	DocumentStatusPENDING  DocumentStatus = "PENDING"
+	DocumentStatusREJECTED DocumentStatus = "REJECTED"
+	DocumentStatusAPPROVED DocumentStatus = "APPROVED"
+	DocumentStatusDRAFT    DocumentStatus = "DRAFT"
+)
+
+func (e *DocumentStatus) Scan(src interface{}) error {
+	switch s := src.(type) {
+	case []byte:
+		*e = DocumentStatus(s)
+	case string:
+		*e = DocumentStatus(s)
+	default:
+		return fmt.Errorf("unsupported scan type for DocumentStatus: %T", src)
+	}
+	return nil
+}
+
+type NullDocumentStatus struct {
+	DocumentStatus DocumentStatus
+	Valid          bool // Valid is true if DocumentStatus is not NULL
+}
+
+// Scan implements the Scanner interface.
+func (ns *NullDocumentStatus) Scan(value interface{}) error {
+	if value == nil {
+		ns.DocumentStatus, ns.Valid = "", false
+		return nil
+	}
+	ns.Valid = true
+	return ns.DocumentStatus.Scan(value)
+}
+
+// Value implements the driver Valuer interface.
+func (ns NullDocumentStatus) Value() (driver.Value, error) {
+	if !ns.Valid {
+		return nil, nil
+	}
+	return string(ns.DocumentStatus), nil
+}
+
+type Entity string
+
+const (
+	EntityESTATE             Entity = "ESTATE"
+	EntitySOLEPROPRIETOR     Entity = "SOLE_PROPRIETOR"
+	EntityCORPORATION        Entity = "CORPORATION"
+	EntityEXEMPTORGANIZATION Entity = "EXEMPT_ORGANIZATION"
+)
+
+func (e *Entity) Scan(src interface{}) error {
+	switch s := src.(type) {
+	case []byte:
+		*e = Entity(s)
+	case string:
+		*e = Entity(s)
+	default:
+		return fmt.Errorf("unsupported scan type for Entity: %T", src)
+	}
+	return nil
+}
+
+type NullEntity struct {
+	Entity Entity
+	Valid  bool // Valid is true if Entity is not NULL
+}
+
+// Scan implements the Scanner interface.
+func (ns *NullEntity) Scan(value interface{}) error {
+	if value == nil {
+		ns.Entity, ns.Valid = "", false
+		return nil
+	}
+	ns.Valid = true
+	return ns.Entity.Scan(value)
+}
+
+// Value implements the driver Valuer interface.
+func (ns NullEntity) Value() (driver.Value, error) {
+	if !ns.Valid {
+		return nil, nil
+	}
+	return string(ns.Entity), nil
+}
+
 type IdentificationType string
 
 const (
@@ -187,10 +275,10 @@ func (ns NullOutcome) Value() (driver.Value, error) {
 type Status string
 
 const (
-	StatusACTIVE    Status = "ACTIVE"
-	StatusINACTIVE  Status = "INACTIVE"
-	StatusBLOCKED   Status = "BLOCKED"
-	StatusSUSPENDED Status = "SUSPENDED"
+	StatusAPPROVED Status = "APPROVED"
+	StatusPENDING  Status = "PENDING"
+	StatusREJECTED Status = "REJECTED"
+	StatusDRAFT    Status = "DRAFT"
 )
 
 func (e *Status) Scan(src interface{}) error {
@@ -229,12 +317,23 @@ func (ns NullStatus) Value() (driver.Value, error) {
 }
 
 type Businesses struct {
-	ID        uuid.NullUUID
-	Name      string
-	OwnerID   uuid.UUID
-	Status    NullStatus
-	CreatedAt pgtype.Timestamp
-	UpdatedAt pgtype.Timestamp
+	ID                 uuid.UUID
+	OrgID              uuid.NullUUID
+	LegalName          string
+	Entity             Entity
+	TaxID              pgtype.Text
+	Dba                string
+	Jurisdiction       string
+	AdminID            uuid.UUID
+	Owners             []byte
+	Address            []byte
+	Website            pgtype.Text
+	PhoneNumbers       []byte
+	EmailAddresses     []byte
+	Documents          []byte
+	CreatedAt          pgtype.Timestamp
+	UpdatedAt          pgtype.Timestamp
+	RegistrationNumber pgtype.Text
 }
 
 type Customers struct {
@@ -242,7 +341,7 @@ type Customers struct {
 	FirstName       string
 	LastName        string
 	MiddleName      pgtype.Text
-	BusinessID      uuid.NullUUID
+	OrgID           uuid.NullUUID
 	CreatorID       uuid.NullUUID
 	Email           pgtype.Text
 	PhoneNumber     pgtype.Text
@@ -254,6 +353,20 @@ type Customers struct {
 	CreatedAt       pgtype.Timestamp
 	UpdatedAt       pgtype.Timestamp
 	DeletedAt       pgtype.Timestamp
+}
+
+type Documents struct {
+	ID           uuid.UUID
+	CustomerID   uuid.NullUUID
+	BusinessID   uuid.NullUUID
+	OriginalName pgtype.Text
+	Filename     pgtype.Text
+	Mimetype     pgtype.Text
+	CreatedAt    pgtype.Timestamp
+	Status       NullDocumentStatus
+	CreatorID    uuid.NullUUID
+	Metadata     []byte
+	UpdatedAt    pgtype.Timestamp
 }
 
 type Identifications struct {
@@ -278,10 +391,19 @@ type Identifications struct {
 	UpdatedAt          pgtype.Timestamp
 }
 
+type Organizations struct {
+	ID        uuid.UUID
+	Name      string
+	Status    NullStatus
+	CreatedAt pgtype.Timestamp
+	UpdatedAt pgtype.Timestamp
+}
+
 type Otps struct {
 	ID          uuid.NullUUID
 	CustomerID  uuid.NullUUID
 	HashedCode  pgtype.Text
+	Code        pgtype.Text
 	Channel     NullChannel
 	ExpiresAt   pgtype.Timestamp
 	VerifiedAt  pgtype.Timestamp
@@ -307,7 +429,9 @@ type Verifications struct {
 	VerificationType pgtype.Text
 	CustomerID       uuid.UUID
 	Customer         []byte
-	BusinessID       uuid.UUID
+	Business         []byte
+	BusinessID       pgtype.Text
+	OrgID            pgtype.Text
 	CreatorID        uuid.UUID
 	Outcome          NullOutcome
 	AmlInsight       []byte

@@ -6,6 +6,8 @@ import (
 
 	"bitbucket.org/msafaridanquah/verifylab-service/business/domain/customerbus"
 	"bitbucket.org/msafaridanquah/verifylab-service/business/domain/customerbus/valueobject"
+	"bitbucket.org/msafaridanquah/verifylab-service/business/domain/documentbus"
+	dvo "bitbucket.org/msafaridanquah/verifylab-service/business/domain/documentbus/valueobject"
 	"bitbucket.org/msafaridanquah/verifylab-service/foundation/ierr"
 )
 
@@ -18,7 +20,7 @@ type Customer struct {
 	Email           string           `json:"email"`
 	PhoneNumber     string           `json:"phone_number"`
 	BirthCountry    Country          `json:"birth_country"`
-	Identifications []Identification `json:"identifications" validate:"omitempty"`
+	Identifications []Identification `json:"identifications" validate:"omitempty,dive"`
 }
 
 type Country struct {
@@ -36,8 +38,8 @@ type NewIdentification struct {
 	IssuedCountry      string  `json:"issued_country" validate:"required"`
 	IdentificationType string  `json:"identification_type" validate:"required"`
 	Nationality        *string `json:"nationality,omitempty"`
-	IssuedDate         *string `json:"issued_date,omitempty,datetime=2006-01-02"`
-	ExpDate            *string `json:"exp_date,omitempty,datetime=2006-01-02"`
+	IssuedDate         *string `json:"issued_date,omitempty" validate:"datetime=2006-01-02"`
+	ExpDate            *string `json:"exp_date,omitempty" validate:"datetime=2006-01-02"`
 }
 
 type Identification struct {
@@ -58,7 +60,7 @@ type NewCustomer struct {
 	Email           string              `json:"email" validate:"required_if=PhoneNumber ''"`
 	PhoneNumber     *PhoneNumber        `json:"phone_number" validate:"required_if=Email ''"`
 	BirthCountry    string              `json:"birth_country" validate:"required"`
-	Identifications []NewIdentification `json:"identifications" validate:"omitempty"`
+	Identifications []NewIdentification `json:"identifications" validate:"omitempty,dive"`
 }
 
 func (o NewCustomer) Validate() error {
@@ -107,14 +109,14 @@ func toAppCustomer(cus customerbus.Customer) Customer {
 	}
 }
 
-func toAppCustomers(cuss []customerbus.Customer) []Customer {
-	app := make([]Customer, len(cuss))
-	for i, cus := range cuss {
-		app[i] = toAppCustomer(cus)
-	}
+// func toAppCustomers(cuss []customerbus.Customer) []Customer {
+// 	app := make([]Customer, len(cuss))
+// 	for i, cus := range cuss {
+// 		app[i] = toAppCustomer(cus)
+// 	}
 
-	return app
-}
+// 	return app
+// }
 
 func toBusNewCustomer(c NewCustomer) (customerbus.NewCustomer, error) {
 	country, err := valueobject.NewCountry(c.BirthCountry)
@@ -178,8 +180,8 @@ func toBusNewCustomer(c NewCustomer) (customerbus.NewCustomer, error) {
 // =======================================================================================
 
 type Address struct {
-	Address1 string `json:"address_1"`
-	Address2 string `json:"address_2"`
+	Address1 string `json:"line_1"`
+	Address2 string `json:"line_2"`
 	City     string `json:"city"`
 	State    string `json:"state"`
 	Zip      string `json:"zip"`
@@ -194,4 +196,64 @@ type UpdateCustomer struct {
 	Email       string  `json:"email" validate:"required"`
 	Country     string  `json:"country" validate:"required"`
 	Address     Address `json:"address"`
+}
+
+// ===========================================================================================
+// Attach a document to a customer
+type NewDocument struct {
+	Classification string `json:"classification" form:"classification" validate:"required"`
+	DocumentType   string `json:"document_type" form:"document_type" validate:"required"`
+}
+
+type Business struct {
+	ID   string `json:"id"`
+	Name string `json:"name"`
+	Dba  string `json:"dba"`
+}
+
+type Document struct {
+	ID        string   `json:"id"`
+	FileName  string   `json:"filename"`
+	MimeType  string   `json:"mime_type"`
+	Business  Business `json:"business,omitzero"`
+	Side      string   `json:"side"`
+	Customer  Customer `json:"customer,omitzero"`
+	CreatedAt string   `json:"created_at"`
+	UpdatedAt string   `json:"updated_at"`
+}
+
+func (o NewDocument) Validate() error {
+	if err := ierr.Check(o); err != nil {
+		return fmt.Errorf("validate new document failed: %w", err)
+	}
+
+	return nil
+}
+
+func toAppDocument(bus documentbus.Document) Document {
+	return Document{
+		ID:        bus.ID.String(),
+		FileName:  bus.FileName,
+		Side:      bus.Side.String(),
+		CreatedAt: bus.CreatedAt.Format(time.RFC3339),
+		UpdatedAt: bus.UpdatedAt.Format(time.RFC3339),
+	}
+}
+
+func toBusNewDocument(napp NewDocument) (documentbus.NewDocument, error) {
+	dt, err := dvo.ParseDocumentType(napp.DocumentType)
+	if err != nil {
+		return documentbus.NewDocument{}, err
+	}
+
+	classification, err := dvo.ParseClassification(napp.Classification)
+	if err != nil {
+		return documentbus.NewDocument{}, err
+	}
+
+	return documentbus.NewDocument{
+		DocumentType:   dt,
+		Classification: classification,
+	}, nil
+
 }

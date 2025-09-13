@@ -5,18 +5,18 @@ ENV CGO_ENABLED=0 \
     GOARCH=amd64
 
 
-WORKDIR /build/
+WORKDIR /build
 COPY . .
 
 RUN go mod download
-RUN go build -o sight ./api/cmd/cli
+RUN go build -o cli ./api/cmd/cli
 
 
-FROM scratch
-WORKDIR /api/
-ENV PATH=/api/bin/:$PATH
+# FROM scratch
+# WORKDIR /api/
+# ENV PATH=/api/bin/:$PATH
 
-COPY --from=builder /build/sight ./bin/sight
-COPY --from=builder /build/env.example .
+# COPY --from=builder /build/cli ./bin/cli
+# COPY --from=builder /build/env.example .
 
-CMD [ "./api/sight"]
+CMD [ "./cli"]

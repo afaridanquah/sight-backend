@@ -1,11 +1,11 @@
 package web
 
 import (
+	"context"
 	"errors"
 	"net/http"
 
 	"bitbucket.org/msafaridanquah/verifylab-service/foundation/ierr"
-	"bitbucket.org/msafaridanquah/verifylab-service/foundation/otel"
 	"github.com/go-chi/render"
 )
 
@@ -15,20 +15,27 @@ type ErrorResponse struct {
 	Validations ierr.FieldErrors `json:"validations,omitempty"`
 }
 
-func RenderErrorResponse(w http.ResponseWriter, r *http.Request, msg string, err error) {
+// =============================================================================
+
+func RenderErrorResponse(ctx context.Context, w http.ResponseWriter, r *http.Request, msg string, err error) {
 	resp := ErrorResponse{Error: msg}
 	status := http.StatusInternalServerError
+
+	// // 	// If the context has been canceled, it means the client is no longer
+	// // 	// waiting for a response.
+	// if err := ctx.Err(); err != nil {
+	// 	if errors.Is(err, context.Canceled) {
+	// 		err = errors.New("client disconnected, do not send response")
+	// 	}
+	// }
 
 	var aerr *ierr.Error
 
 	if !errors.As(err, &aerr) {
 		resp.Error = "internal error"
 	} else {
-
 		switch aerr.Code() {
-		case ierr.ErrorCodeNotFound:
-			status = http.StatusNotFound
-		case ierr.ErrorCodeInvalidArgument:
+		case ierr.InvalidArgument:
 			status = http.StatusBadRequest
 
 			var verrors ierr.FieldErrors
@@ -36,16 +43,16 @@ func RenderErrorResponse(w http.ResponseWriter, r *http.Request, msg string, err
 			if errors.As(aerr, &verrors) {
 				resp.Validations = verrors
 			}
-		case ierr.ErrorCodeUnknown:
+		case ierr.Unknown:
 			fallthrough
 		default:
-			status = http.StatusInternalServerError
+			status = aerr.HTTPStatus()
 		}
 	}
 
 	if err != nil {
-		// _, span := otel.Tracer().Start(r.Context(), "renderErrorResponse")
-		_, span := otel.AddSpan(r.Context(), "renderErrorResponse")
+		_, span := addSpan(ctx, "rendererrorresponse")
+
 		span.RecordError(err)
 		defer span.End()
 	}
@@ -54,7 +61,7 @@ func RenderErrorResponse(w http.ResponseWriter, r *http.Request, msg string, err
 	render.JSON(w, r, &resp)
 }
 
-func RenderResponse(w http.ResponseWriter, r *http.Request, res interface{}, status int) {
+func RenderResponse(status int, w http.ResponseWriter, r *http.Request, data any) {
 	render.Status(r, status)
-	render.JSON(w, r, res)
+	render.JSON(w, r, data)
 }

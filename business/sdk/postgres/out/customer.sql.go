@@ -13,13 +13,14 @@ import (
 )
 
 const CreateCustomer = `-- name: CreateCustomer :exec
-    INSERT INTO customers(id, first_name, last_name, middle_name, date_of_birth, birth_country, city_of_birth, email, phone_number, business_id, creator_id, identifications, addresses, created_at, updated_at)
+    INSERT INTO customers(id, org_id, first_name, last_name, middle_name, date_of_birth, birth_country, city_of_birth, email, phone_number, creator_id, identifications, addresses, created_at, updated_at)
     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)
-    RETURNING id, first_name, last_name, middle_name, business_id, creator_id, email, phone_number, city_of_birth, birth_country, date_of_birth, identifications, addresses, created_at, updated_at, deleted_at
+    RETURNING id, first_name, last_name, middle_name, org_id, creator_id, email, phone_number, city_of_birth, birth_country, date_of_birth, identifications, addresses, created_at, updated_at, deleted_at
 `
 
 type CreateCustomerParams struct {
 	ID              uuid.UUID
+	OrgID           uuid.NullUUID
 	FirstName       string
 	LastName        string
 	MiddleName      pgtype.Text
@@ -28,7 +29,6 @@ type CreateCustomerParams struct {
 	CityOfBirth     pgtype.Text
 	Email           pgtype.Text
 	PhoneNumber     pgtype.Text
-	BusinessID      uuid.NullUUID
 	CreatorID       uuid.NullUUID
 	Identifications []byte
 	Addresses       []byte
@@ -39,6 +39,7 @@ type CreateCustomerParams struct {
 func (q *Queries) CreateCustomer(ctx context.Context, arg CreateCustomerParams) error {
 	_, err := q.db.Exec(ctx, CreateCustomer,
 		arg.ID,
+		arg.OrgID,
 		arg.FirstName,
 		arg.LastName,
 		arg.MiddleName,
@@ -47,7 +48,6 @@ func (q *Queries) CreateCustomer(ctx context.Context, arg CreateCustomerParams) 
 		arg.CityOfBirth,
 		arg.Email,
 		arg.PhoneNumber,
-		arg.BusinessID,
 		arg.CreatorID,
 		arg.Identifications,
 		arg.Addresses,
@@ -57,26 +57,26 @@ func (q *Queries) CreateCustomer(ctx context.Context, arg CreateCustomerParams) 
 	return err
 }
 
-const QueryCustomerByAndBusinessID = `-- name: QueryCustomerByAndBusinessID :one
-    SELECT id, first_name, last_name, middle_name, business_id, creator_id, email, phone_number, city_of_birth, birth_country, date_of_birth, identifications, addresses, created_at, updated_at, deleted_at FROM customers
+const QueryCustomerByAndOrgID = `-- name: QueryCustomerByAndOrgID :one
+    SELECT id, first_name, last_name, middle_name, org_id, creator_id, email, phone_number, city_of_birth, birth_country, date_of_birth, identifications, addresses, created_at, updated_at, deleted_at FROM customers
     WHERE customers.id = $1
-    AND customers.business_id = $2
+    AND customers.org_id = $2
 `
 
-type QueryCustomerByAndBusinessIDParams struct {
-	ID         uuid.UUID
-	BusinessID uuid.NullUUID
+type QueryCustomerByAndOrgIDParams struct {
+	ID    uuid.UUID
+	OrgID uuid.NullUUID
 }
 
-func (q *Queries) QueryCustomerByAndBusinessID(ctx context.Context, arg QueryCustomerByAndBusinessIDParams) (Customers, error) {
-	row := q.db.QueryRow(ctx, QueryCustomerByAndBusinessID, arg.ID, arg.BusinessID)
+func (q *Queries) QueryCustomerByAndOrgID(ctx context.Context, arg QueryCustomerByAndOrgIDParams) (Customers, error) {
+	row := q.db.QueryRow(ctx, QueryCustomerByAndOrgID, arg.ID, arg.OrgID)
 	var i Customers
 	err := row.Scan(
 		&i.ID,
 		&i.FirstName,
 		&i.LastName,
 		&i.MiddleName,
-		&i.BusinessID,
+		&i.OrgID,
 		&i.CreatorID,
 		&i.Email,
 		&i.PhoneNumber,
@@ -93,7 +93,7 @@ func (q *Queries) QueryCustomerByAndBusinessID(ctx context.Context, arg QueryCus
 }
 
 const QueryCustomerByID = `-- name: QueryCustomerByID :one
-    SELECT id, first_name, last_name, middle_name, business_id, creator_id, email, phone_number, city_of_birth, birth_country, date_of_birth, identifications, addresses, created_at, updated_at, deleted_at FROM customers
+    SELECT id, first_name, last_name, middle_name, org_id, creator_id, email, phone_number, city_of_birth, birth_country, date_of_birth, identifications, addresses, created_at, updated_at, deleted_at FROM customers
     WHERE customers.id = $1
 `
 
@@ -105,7 +105,7 @@ func (q *Queries) QueryCustomerByID(ctx context.Context, id uuid.UUID) (Customer
 		&i.FirstName,
 		&i.LastName,
 		&i.MiddleName,
-		&i.BusinessID,
+		&i.OrgID,
 		&i.CreatorID,
 		&i.Email,
 		&i.PhoneNumber,
@@ -119,4 +119,47 @@ func (q *Queries) QueryCustomerByID(ctx context.Context, id uuid.UUID) (Customer
 		&i.DeletedAt,
 	)
 	return i, err
+}
+
+const UpdateCustomer = `-- name: UpdateCustomer :exec
+    UPDATE customers
+    SET first_name = $2,
+        last_name = $3,
+        middle_name = $4,
+        birth_country = $5,
+        city_of_birth = $6,
+        email = $7,
+        phone_number = $8,
+        updated_at = $9,
+        date_of_birth = $10
+    WHERE id = $1
+`
+
+type UpdateCustomerParams struct {
+	ID           uuid.UUID
+	FirstName    string
+	LastName     string
+	MiddleName   pgtype.Text
+	BirthCountry pgtype.Text
+	CityOfBirth  pgtype.Text
+	Email        pgtype.Text
+	PhoneNumber  pgtype.Text
+	UpdatedAt    pgtype.Timestamp
+	DateOfBirth  pgtype.Date
+}
+
+func (q *Queries) UpdateCustomer(ctx context.Context, arg UpdateCustomerParams) error {
+	_, err := q.db.Exec(ctx, UpdateCustomer,
+		arg.ID,
+		arg.FirstName,
+		arg.LastName,
+		arg.MiddleName,
+		arg.BirthCountry,
+		arg.CityOfBirth,
+		arg.Email,
+		arg.PhoneNumber,
+		arg.UpdatedAt,
+		arg.DateOfBirth,
+	)
+	return err
 }

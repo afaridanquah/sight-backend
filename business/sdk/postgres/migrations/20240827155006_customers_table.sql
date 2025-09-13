@@ -4,7 +4,7 @@ CREATE TABLE customers (
     first_name VARCHAR(30) NOT NULL,
     last_name VARCHAR(30) NOT NULL,
     middle_name VARCHAR(30),
-    business_id UUID,
+    org_id UUID,
     creator_id UUID,
     email TEXT,
     phone_number VARCHAR(20),

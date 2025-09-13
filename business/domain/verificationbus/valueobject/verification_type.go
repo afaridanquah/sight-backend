@@ -16,9 +16,11 @@ var (
 	AMLScreening        = VerificationType{"AML_SCREENING"}
 	AdverseMedia        = VerificationType{"ADVERSE_MEDIA"}
 	PhoneNumber         = VerificationType{"PHONENUMBER"}
+	Selfie              = VerificationType{"SELFIE"}
+	Liveness            = VerificationType{"LIVENESS"}
 )
 
-var VerificationTypes = []VerificationType{DocumentInsight, AddressVerification, GovVendor, AMLScreening, AdverseMedia, PhoneNumber}
+var VerificationTypes = []VerificationType{DocumentInsight, AddressVerification, GovVendor, AMLScreening, AdverseMedia, PhoneNumber, Selfie, Liveness}
 
 func ParseVerificationType(v string) (VerificationType, error) {
 	if v == "" {
@@ -39,6 +41,10 @@ func ParseVerificationType(v string) (VerificationType, error) {
 		return AdverseMedia, nil
 	case "PHONENUMBER":
 		return PhoneNumber, nil
+	case "SELFIE":
+		return Selfie, nil
+	case "LIVENESS":
+		return Liveness, nil
 	default:
 		return VerificationType{}, fmt.Errorf("parseverification invalid")
 	}

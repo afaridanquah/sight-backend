@@ -8,17 +8,48 @@ import (
 )
 
 type Business struct {
-	ID        uuid.UUID
-	Name      string
-	OwnerID   uuid.UUID
-	Status    valueobject.Status
-	CreatedAt time.Time
-	UpdatedAt time.Time
+	ID                     uuid.UUID
+	LegalName              string
+	DoingBusinessAs        string
+	RegistrationNumber     string
+	TaxID                  string
+	Entity                 valueobject.BusinessEntity
+	CountryOfIncorporation valueobject.Country
+	Address                valueobject.Address
+	EmailAddresses         []valueobject.Email
+	PhoneNumbers           []valueobject.Phone
+	Website                string
+	Owners                 []valueobject.Owner
+	Documents              []valueobject.Document
+	AdminID                string
+	Status                 valueobject.Status
+	OrgID                  uuid.UUID
+	CreatedAt              time.Time
+	UpdatedAt              time.Time
 }
 
 type NewBusiness struct {
-	ID      uuid.UUID
-	Name    string
-	OwnerID uuid.UUID
-	Status  valueobject.Status
+	LegalName              string
+	DoingBusinessAs        string
+	RegistrationNumber     string
+	AdminID                string
+	Entity                 valueobject.BusinessEntity
+	OrgID                  uuid.UUID
+	Website                string
+	EmailAddresses         []valueobject.Email
+	PhoneNumbers           []valueobject.Phone
+	Address                valueobject.Address
+	CountryOfIncorporation valueobject.Country
+}
+
+type UpdateBusiness struct {
+	LegalName              *string
+	DoingBusinessAs        *string
+	RegistrationNumber     *string
+	EmailAddresses         *[]valueobject.Email
+	PhoneNumbers           *[]valueobject.Phone
+	Website                *string
+	Entity                 *valueobject.BusinessEntity
+	Address                *valueobject.Address
+	CountryOfIncorporation *valueobject.Country
 }

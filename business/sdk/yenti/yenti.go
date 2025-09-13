@@ -25,6 +25,7 @@ type Yenti struct {
 	endpoint string
 	http     *http.Client
 	log      *logger.Logger
+	host     string
 }
 type Weights struct {
 	NameLiteralMatch float64 `json:"name_literal_match"`
@@ -123,37 +124,45 @@ func New(conf Config) (*Yenti, error) {
 
 	return &Yenti{
 		endpoint: strings.Join([]string{host, "/match/default?algorithm=best"}, ""),
+		host:     host,
 		http:     &defaultClient,
 		log:      conf.Log,
 	}, nil
 }
 
-func (o *Yenti) Search(nu NewLookup) (YentiResponse, error) {
+func (o *Yenti) Search(ctx context.Context, nu NewLookup) (YentiResponse, error) {
 	payload, err := json.Marshal(nu)
 	if err != nil {
 		return YentiResponse{}, err
 	}
 
-	u, err := url.Parse(o.endpoint)
+	endpoint := strings.Join([]string{o.host, "/match/default?algorithm=best"}, "")
+	u, err := url.Parse(endpoint)
 	if err != nil {
 		return YentiResponse{}, fmt.Errorf("parsing endpoint: %w", err)
 	}
 
-	req, err := http.NewRequest("POST", u.String(), bytes.NewBuffer(payload))
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, u.String(), bytes.NewBuffer(payload))
 	if err != nil {
 		o.log.Error(context.Background(), "Error creating request: %v", err)
+		return YentiResponse{}, err
 	}
 
 	// Create an HTTP client and send the request
 	resp, err := o.http.Do(req)
 	if err != nil {
 		o.log.Error(context.Background(), "Error sending request: %v", err)
+		return YentiResponse{}, err
 	}
-	defer resp.Body.Close()
+
+	defer func() {
+		_ = resp.Body.Close()
+	}()
 
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
 		o.log.Error(context.Background(), "Error parsing response: %v", err)
+		return YentiResponse{}, err
 	}
 
 	var yentiResponse YentiResponse
@@ -162,7 +171,43 @@ func (o *Yenti) Search(nu NewLookup) (YentiResponse, error) {
 		return YentiResponse{}, err
 	}
 
-	fmt.Printf("yenti response %v\n", string(body))
+	return yentiResponse, nil
+}
+
+func (o *Yenti) Entity(ctx context.Context, entityID string) (YentiResponse, error) {
+	endpoint := strings.Join([]string{o.host, "/entities/", entityID}, "")
+	u, err := url.Parse(endpoint)
+	if err != nil {
+		return YentiResponse{}, fmt.Errorf("parsing endpoint: %w", err)
+	}
+
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, u.String(), nil)
+	if err != nil {
+		o.log.Error(context.Background(), "Error creating request: %v", err)
+		return YentiResponse{}, err
+	}
+	// Create an HTTP client and send the request
+	resp, err := o.http.Do(req)
+	if err != nil {
+		o.log.Error(context.Background(), "Error sending request: %v", err)
+		return YentiResponse{}, err
+	}
+
+	defer func() {
+		_ = resp.Body.Close()
+	}()
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		o.log.Error(context.Background(), "Error parsing response: %v", err)
+		return YentiResponse{}, err
+	}
+
+	var yentiResponse YentiResponse
+
+	if err := json.Unmarshal(body, &yentiResponse); err != nil {
+		return YentiResponse{}, err
+	}
 
 	return yentiResponse, nil
 }
