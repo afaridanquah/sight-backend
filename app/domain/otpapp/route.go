@@ -1,9 +1,9 @@
 package otpapp
 
 import (
-	"bitbucket.org/msafaridanquah/verifylab-service/business/domain/customerbus"
-	"bitbucket.org/msafaridanquah/verifylab-service/business/domain/otpbus"
-	"bitbucket.org/msafaridanquah/verifylab-service/foundation/logger"
+	"bitbucket.org/msafaridanquah/sight-backend/business/domain/customerbus"
+	"bitbucket.org/msafaridanquah/sight-backend/business/domain/otpbus"
+	"bitbucket.org/msafaridanquah/sight-backend/foundation/logger"
 	"github.com/go-chi/chi/v5"
 )
 

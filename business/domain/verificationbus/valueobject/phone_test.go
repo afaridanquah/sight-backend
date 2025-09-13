@@ -3,7 +3,7 @@ package valueobject_test
 import (
 	"testing"
 
-	"bitbucket.org/msafaridanquah/verifylab-service/business/domain/verificationbus/valueobject"
+	"bitbucket.org/msafaridanquah/sight-backend/business/domain/verificationbus/valueobject"
 )
 
 func TestParsePhone(t *testing.T) {

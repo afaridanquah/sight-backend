@@ -4,10 +4,10 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"bitbucket.org/msafaridanquah/verifylab-service/business/domain/businessbus"
-	"bitbucket.org/msafaridanquah/verifylab-service/foundation/ierr"
-	"bitbucket.org/msafaridanquah/verifylab-service/foundation/logger"
-	"bitbucket.org/msafaridanquah/verifylab-service/foundation/web"
+	"bitbucket.org/msafaridanquah/sight-backend/business/domain/businessbus"
+	"bitbucket.org/msafaridanquah/sight-backend/foundation/ierr"
+	"bitbucket.org/msafaridanquah/sight-backend/foundation/logger"
+	"bitbucket.org/msafaridanquah/sight-backend/foundation/web"
 	"github.com/go-chi/chi/v5"
 	"github.com/google/uuid"
 )
@@ -38,7 +38,8 @@ func (a *App) create(w http.ResponseWriter, r *http.Request) {
 	}()
 
 	if err := napp.Validate(); err != nil {
-		web.RenderErrorResponse(ctx, w, r, "validation failed", ierr.WrapErrorf(err, ierr.InvalidArgument, "json decoder"))
+		web.RenderErrorResponse(ctx, w, r,
+			"validation failed", ierr.WrapErrorf(err, ierr.InvalidArgument, "json decoder"))
 		return
 	}
 
@@ -80,7 +81,8 @@ func (a *App) update(w http.ResponseWriter, r *http.Request) {
 	}()
 
 	if err := up.Validate(); err != nil {
-		web.RenderErrorResponse(ctx, w, r, "validation failed", ierr.WrapErrorf(err, ierr.InvalidArgument, "json decoder"))
+		web.RenderErrorResponse(ctx, w, r, "validation failed",
+			ierr.WrapErrorf(err, ierr.InvalidArgument, "json decoder"))
 		return
 	}
 

@@ -7,7 +7,7 @@ import (
 	"net/http"
 	"time"
 
-	"bitbucket.org/msafaridanquah/verifylab-service/foundation/logger"
+	"bitbucket.org/msafaridanquah/sight-backend/foundation/logger"
 	"github.com/google/uuid"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"

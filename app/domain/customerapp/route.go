@@ -1,11 +1,11 @@
 package customerapp
 
 import (
-	"bitbucket.org/msafaridanquah/verifylab-service/business/domain/customerbus"
-	"bitbucket.org/msafaridanquah/verifylab-service/business/domain/customerbus/postgres"
-	"bitbucket.org/msafaridanquah/verifylab-service/business/domain/documentbus"
-	"bitbucket.org/msafaridanquah/verifylab-service/foundation/envvar"
-	"bitbucket.org/msafaridanquah/verifylab-service/foundation/logger"
+	"bitbucket.org/msafaridanquah/sight-backend/business/domain/customerbus"
+	"bitbucket.org/msafaridanquah/sight-backend/business/domain/customerbus/postgres"
+	"bitbucket.org/msafaridanquah/sight-backend/business/domain/documentbus"
+	"bitbucket.org/msafaridanquah/sight-backend/foundation/envvar"
+	"bitbucket.org/msafaridanquah/sight-backend/foundation/logger"
 	"github.com/go-chi/chi/v5"
 )
 

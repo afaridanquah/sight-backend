@@ -5,9 +5,9 @@ import (
 	"log/slog"
 	"time"
 
-	"bitbucket.org/msafaridanquah/verifylab-service/business/domain/customerbus/valueobject"
-	"bitbucket.org/msafaridanquah/verifylab-service/foundation/logger"
-	"bitbucket.org/msafaridanquah/verifylab-service/foundation/otel"
+	"bitbucket.org/msafaridanquah/sight-backend/business/domain/customerbus/valueobject"
+	"bitbucket.org/msafaridanquah/sight-backend/foundation/logger"
+	"bitbucket.org/msafaridanquah/sight-backend/foundation/otel"
 	"github.com/google/uuid"
 	"github.com/mercari/go-circuitbreaker"
 )

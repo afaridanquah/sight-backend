@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"time"
 
-	"bitbucket.org/msafaridanquah/verifylab-service/foundation/logger"
+	"bitbucket.org/msafaridanquah/sight-backend/foundation/logger"
 )
 
 func Logger(logger *logger.Logger) func(http.Handler) http.Handler {

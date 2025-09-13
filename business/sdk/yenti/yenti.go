@@ -12,8 +12,8 @@ import (
 	"strings"
 	"time"
 
-	"bitbucket.org/msafaridanquah/verifylab-service/foundation/envvar"
-	"bitbucket.org/msafaridanquah/verifylab-service/foundation/logger"
+	"bitbucket.org/msafaridanquah/sight-backend/foundation/envvar"
+	"bitbucket.org/msafaridanquah/sight-backend/foundation/logger"
 )
 
 type Config struct {

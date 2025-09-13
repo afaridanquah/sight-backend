@@ -1,8 +1,8 @@
 package command
 
 import (
-	"bitbucket.org/msafaridanquah/verifylab-service/foundation/logger"
-	"bitbucket.org/msafaridanquah/verifylab-service/foundation/vaulti"
+	"bitbucket.org/msafaridanquah/sight-backend/foundation/logger"
+	"bitbucket.org/msafaridanquah/sight-backend/foundation/vaulti"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"go.opentelemetry.io/otel/trace"
 )

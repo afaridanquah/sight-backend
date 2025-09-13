@@ -3,7 +3,7 @@ package businessbus
 import (
 	"time"
 
-	"bitbucket.org/msafaridanquah/verifylab-service/business/domain/businessbus/valueobject"
+	"bitbucket.org/msafaridanquah/sight-backend/business/domain/businessbus/valueobject"
 	"github.com/google/uuid"
 )
 

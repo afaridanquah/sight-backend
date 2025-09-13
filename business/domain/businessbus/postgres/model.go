@@ -3,9 +3,9 @@ package postgres
 import (
 	"encoding/json"
 
-	"bitbucket.org/msafaridanquah/verifylab-service/business/domain/businessbus"
-	"bitbucket.org/msafaridanquah/verifylab-service/business/domain/businessbus/valueobject"
-	db "bitbucket.org/msafaridanquah/verifylab-service/business/sdk/postgres/out"
+	"bitbucket.org/msafaridanquah/sight-backend/business/domain/businessbus"
+	"bitbucket.org/msafaridanquah/sight-backend/business/domain/businessbus/valueobject"
+	db "bitbucket.org/msafaridanquah/sight-backend/business/sdk/postgres/out"
 )
 
 type Owner struct {

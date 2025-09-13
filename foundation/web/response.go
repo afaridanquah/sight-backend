@@ -5,7 +5,7 @@ import (
 	"errors"
 	"net/http"
 
-	"bitbucket.org/msafaridanquah/verifylab-service/foundation/ierr"
+	"bitbucket.org/msafaridanquah/sight-backend/foundation/ierr"
 	"github.com/go-chi/render"
 )
 

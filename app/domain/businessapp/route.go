@@ -1,9 +1,9 @@
 package businessapp
 
 import (
-	"bitbucket.org/msafaridanquah/verifylab-service/business/domain/businessbus"
-	"bitbucket.org/msafaridanquah/verifylab-service/business/domain/businessbus/postgres"
-	"bitbucket.org/msafaridanquah/verifylab-service/foundation/logger"
+	"bitbucket.org/msafaridanquah/sight-backend/business/domain/businessbus"
+	"bitbucket.org/msafaridanquah/sight-backend/business/domain/businessbus/postgres"
+	"bitbucket.org/msafaridanquah/sight-backend/foundation/logger"
 	"github.com/go-chi/chi/v5"
 )
 

@@ -3,10 +3,10 @@ package postgres
 import (
 	"context"
 
-	"bitbucket.org/msafaridanquah/verifylab-service/business/domain/organizationbus"
-	db "bitbucket.org/msafaridanquah/verifylab-service/business/sdk/postgres/out"
-	"bitbucket.org/msafaridanquah/verifylab-service/foundation/otel"
-	"bitbucket.org/msafaridanquah/verifylab-service/foundation/vaulti"
+	"bitbucket.org/msafaridanquah/sight-backend/business/domain/organizationbus"
+	db "bitbucket.org/msafaridanquah/sight-backend/business/sdk/postgres/out"
+	"bitbucket.org/msafaridanquah/sight-backend/foundation/otel"
+	"bitbucket.org/msafaridanquah/sight-backend/foundation/vaulti"
 	"github.com/jackc/pgx/v5/pgxpool"
 	semconv "go.opentelemetry.io/otel/semconv/v1.26.0"
 )

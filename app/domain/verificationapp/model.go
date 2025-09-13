@@ -6,10 +6,10 @@ import (
 	"strings"
 	"time"
 
-	"bitbucket.org/msafaridanquah/verifylab-service/business/domain/customerbus"
-	"bitbucket.org/msafaridanquah/verifylab-service/business/domain/verificationbus"
-	"bitbucket.org/msafaridanquah/verifylab-service/business/domain/verificationbus/valueobject"
-	"bitbucket.org/msafaridanquah/verifylab-service/foundation/ierr"
+	"bitbucket.org/msafaridanquah/sight-backend/business/domain/customerbus"
+	"bitbucket.org/msafaridanquah/sight-backend/business/domain/verificationbus"
+	"bitbucket.org/msafaridanquah/sight-backend/business/domain/verificationbus/valueobject"
+	"bitbucket.org/msafaridanquah/sight-backend/foundation/ierr"
 )
 
 type Verification struct {

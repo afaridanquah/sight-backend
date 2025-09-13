@@ -4,7 +4,7 @@ import (
 	"errors"
 	"time"
 
-	"bitbucket.org/msafaridanquah/verifylab-service/business/domain/customerbus/valueobject"
+	"bitbucket.org/msafaridanquah/sight-backend/business/domain/customerbus/valueobject"
 	"github.com/google/uuid"
 )
 

@@ -6,8 +6,8 @@ import (
 	"log"
 	"net/url"
 
-	"bitbucket.org/msafaridanquah/verifylab-service/foundation/envvar"
-	"bitbucket.org/msafaridanquah/verifylab-service/foundation/ierr"
+	"bitbucket.org/msafaridanquah/sight-backend/foundation/envvar"
+	"bitbucket.org/msafaridanquah/sight-backend/foundation/ierr"
 	"github.com/exaring/otelpgx"
 	"github.com/jackc/pgx/v5/pgxpool"
 	_ "github.com/jackc/pgx/v5/stdlib"

@@ -5,10 +5,10 @@ import (
 	"log/slog"
 	"time"
 
-	"bitbucket.org/msafaridanquah/verifylab-service/business/sdk/aws"
-	"bitbucket.org/msafaridanquah/verifylab-service/foundation/envvar"
-	"bitbucket.org/msafaridanquah/verifylab-service/foundation/logger"
-	"bitbucket.org/msafaridanquah/verifylab-service/foundation/otel"
+	"bitbucket.org/msafaridanquah/sight-backend/business/sdk/aws"
+	"bitbucket.org/msafaridanquah/sight-backend/foundation/envvar"
+	"bitbucket.org/msafaridanquah/sight-backend/foundation/logger"
+	"bitbucket.org/msafaridanquah/sight-backend/foundation/otel"
 	"github.com/google/uuid"
 	"github.com/mercari/go-circuitbreaker"
 )

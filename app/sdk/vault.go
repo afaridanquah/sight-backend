@@ -3,8 +3,8 @@ package sdk
 import (
 	"os"
 
-	"bitbucket.org/msafaridanquah/verifylab-service/foundation/envvar/vault"
-	"bitbucket.org/msafaridanquah/verifylab-service/foundation/ierr"
+	"bitbucket.org/msafaridanquah/sight-backend/foundation/envvar/vault"
+	"bitbucket.org/msafaridanquah/sight-backend/foundation/ierr"
 )
 
 // NewVaultProvider instantiates the Vault client using configuration defined in environment variables.

@@ -5,11 +5,11 @@ import (
 	"fmt"
 	"net/http"
 
-	"bitbucket.org/msafaridanquah/verifylab-service/business/domain/customerbus"
-	"bitbucket.org/msafaridanquah/verifylab-service/business/domain/otpbus"
-	"bitbucket.org/msafaridanquah/verifylab-service/foundation/ierr"
-	"bitbucket.org/msafaridanquah/verifylab-service/foundation/logger"
-	"bitbucket.org/msafaridanquah/verifylab-service/foundation/web"
+	"bitbucket.org/msafaridanquah/sight-backend/business/domain/customerbus"
+	"bitbucket.org/msafaridanquah/sight-backend/business/domain/otpbus"
+	"bitbucket.org/msafaridanquah/sight-backend/foundation/ierr"
+	"bitbucket.org/msafaridanquah/sight-backend/foundation/logger"
+	"bitbucket.org/msafaridanquah/sight-backend/foundation/web"
 	"github.com/go-chi/chi/v5"
 	"github.com/google/uuid"
 )

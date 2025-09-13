@@ -3,7 +3,7 @@ package mid
 import (
 	"net/http"
 
-	"bitbucket.org/msafaridanquah/verifylab-service/foundation/otel"
+	"bitbucket.org/msafaridanquah/sight-backend/foundation/otel"
 	"go.opentelemetry.io/otel/trace"
 )
 

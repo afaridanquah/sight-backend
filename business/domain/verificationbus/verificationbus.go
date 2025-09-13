@@ -5,8 +5,8 @@ import (
 	"errors"
 	"time"
 
-	"bitbucket.org/msafaridanquah/verifylab-service/business/domain/verificationbus/valueobject"
-	"bitbucket.org/msafaridanquah/verifylab-service/business/sdk/yenti"
+	"bitbucket.org/msafaridanquah/sight-backend/business/domain/verificationbus/valueobject"
+	"bitbucket.org/msafaridanquah/sight-backend/business/sdk/yenti"
 	"github.com/google/uuid"
 )
 

@@ -5,7 +5,7 @@ import (
 	"math/big"
 	"time"
 
-	"bitbucket.org/msafaridanquah/verifylab-service/business/domain/otpbus/valueobject"
+	"bitbucket.org/msafaridanquah/sight-backend/business/domain/otpbus/valueobject"
 	"github.com/google/uuid"
 )
 

@@ -3,7 +3,7 @@ package documentbus
 import (
 	"time"
 
-	"bitbucket.org/msafaridanquah/verifylab-service/business/domain/documentbus/valueobject"
+	"bitbucket.org/msafaridanquah/sight-backend/business/domain/documentbus/valueobject"
 	"github.com/google/uuid"
 )
 

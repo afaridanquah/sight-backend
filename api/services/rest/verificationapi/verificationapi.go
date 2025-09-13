@@ -1,14 +1,14 @@
 package verificationapi
 
 import (
-	"bitbucket.org/msafaridanquah/verifylab-service/app/domain/verificationapp"
-	"bitbucket.org/msafaridanquah/verifylab-service/business/domain/customerbus"
-	"bitbucket.org/msafaridanquah/verifylab-service/business/domain/customerbus/postgres"
-	"bitbucket.org/msafaridanquah/verifylab-service/business/domain/verificationbus"
-	vp "bitbucket.org/msafaridanquah/verifylab-service/business/domain/verificationbus/postgres"
-	"bitbucket.org/msafaridanquah/verifylab-service/foundation/envvar"
-	"bitbucket.org/msafaridanquah/verifylab-service/foundation/logger"
-	"bitbucket.org/msafaridanquah/verifylab-service/foundation/vaulti"
+	"bitbucket.org/msafaridanquah/sight-backend/app/domain/verificationapp"
+	"bitbucket.org/msafaridanquah/sight-backend/business/domain/customerbus"
+	"bitbucket.org/msafaridanquah/sight-backend/business/domain/customerbus/postgres"
+	"bitbucket.org/msafaridanquah/sight-backend/business/domain/verificationbus"
+	vp "bitbucket.org/msafaridanquah/sight-backend/business/domain/verificationbus/postgres"
+	"bitbucket.org/msafaridanquah/sight-backend/foundation/envvar"
+	"bitbucket.org/msafaridanquah/sight-backend/foundation/logger"
+	"bitbucket.org/msafaridanquah/sight-backend/foundation/vaulti"
 	"github.com/go-chi/chi/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 )

@@ -1,8 +1,8 @@
 package postgres
 
 import (
-	db "bitbucket.org/msafaridanquah/verifylab-service/business/sdk/postgres/out"
-	"bitbucket.org/msafaridanquah/verifylab-service/foundation/vaulti"
+	db "bitbucket.org/msafaridanquah/sight-backend/business/sdk/postgres/out"
+	"bitbucket.org/msafaridanquah/sight-backend/foundation/vaulti"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 

@@ -3,9 +3,9 @@ package otpapp
 import (
 	"fmt"
 
-	"bitbucket.org/msafaridanquah/verifylab-service/business/domain/otpbus"
-	"bitbucket.org/msafaridanquah/verifylab-service/business/domain/otpbus/valueobject"
-	"bitbucket.org/msafaridanquah/verifylab-service/foundation/ierr"
+	"bitbucket.org/msafaridanquah/sight-backend/business/domain/otpbus"
+	"bitbucket.org/msafaridanquah/sight-backend/business/domain/otpbus/valueobject"
+	"bitbucket.org/msafaridanquah/sight-backend/foundation/ierr"
 	"github.com/google/uuid"
 )
 

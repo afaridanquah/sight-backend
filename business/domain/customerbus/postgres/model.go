@@ -4,10 +4,10 @@ import (
 	"encoding/json"
 	"time"
 
-	"bitbucket.org/msafaridanquah/verifylab-service/business/domain/customerbus"
-	"bitbucket.org/msafaridanquah/verifylab-service/business/domain/customerbus/valueobject"
-	db "bitbucket.org/msafaridanquah/verifylab-service/business/sdk/postgres/out"
-	"bitbucket.org/msafaridanquah/verifylab-service/foundation/vaulti"
+	"bitbucket.org/msafaridanquah/sight-backend/business/domain/customerbus"
+	"bitbucket.org/msafaridanquah/sight-backend/business/domain/customerbus/valueobject"
+	db "bitbucket.org/msafaridanquah/sight-backend/business/sdk/postgres/out"
+	"bitbucket.org/msafaridanquah/sight-backend/foundation/vaulti"
 )
 
 const vaultKey = "pii_key"

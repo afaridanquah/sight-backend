@@ -3,7 +3,7 @@ package twilio_test
 import (
 	"testing"
 
-	"bitbucket.org/msafaridanquah/verifylab-service/business/sdk/twilio"
+	"bitbucket.org/msafaridanquah/sight-backend/business/sdk/twilio"
 )
 
 func TestSend(t *testing.T) {

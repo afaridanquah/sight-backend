@@ -3,7 +3,7 @@ package identificationbus
 import (
 	"time"
 
-	"bitbucket.org/msafaridanquah/verifylab-service/business/domain/identificationbus/valueobject"
+	"bitbucket.org/msafaridanquah/sight-backend/business/domain/identificationbus/valueobject"
 	"github.com/google/uuid"
 )
 

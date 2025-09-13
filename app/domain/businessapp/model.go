@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"time"
 
-	"bitbucket.org/msafaridanquah/verifylab-service/business/domain/businessbus"
-	"bitbucket.org/msafaridanquah/verifylab-service/business/domain/businessbus/valueobject"
-	"bitbucket.org/msafaridanquah/verifylab-service/foundation/ierr"
+	"bitbucket.org/msafaridanquah/sight-backend/business/domain/businessbus"
+	"bitbucket.org/msafaridanquah/sight-backend/business/domain/businessbus/valueobject"
+	"bitbucket.org/msafaridanquah/sight-backend/foundation/ierr"
 )
 
 type Business struct {
@@ -25,6 +25,7 @@ type Business struct {
 }
 
 type NewBusiness struct {
+	Address            Address  `json:"address,omitzero"`
 	LegalName          string   `json:"legal_name" validate:"required"`
 	RegistrationNumber string   `json:"registration_number"`
 	Website            string   `json:"website" validate:"required,url"`
@@ -33,7 +34,6 @@ type NewBusiness struct {
 	Entity             string   `json:"entity" validate:"required"`
 	EmailAddresses     []string `json:"email_addresses" validate:"required"`
 	PhoneNumbers       []string `json:"phone_numbers" validate:"required"`
-	Address            Address  `json:"address,omitzero"`
 }
 
 type NewDocument struct {
@@ -79,7 +79,13 @@ func toBusBusiness(napp NewBusiness) (businessbus.NewBusiness, error) {
 		return businessbus.NewBusiness{}, err
 	}
 
-	address, err := valueobject.ParseAddress(napp.Address.Line1, &napp.Address.Line2, napp.Address.City, napp.Address.State, napp.Address.Country)
+	address, err := valueobject.ParseAddress(
+		napp.Address.Line1,
+		&napp.Address.Line2,
+		napp.Address.City,
+		napp.Address.State,
+		napp.Address.Country,
+	)
 	if err != nil {
 		return businessbus.NewBusiness{}, err
 	}

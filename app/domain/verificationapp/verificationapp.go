@@ -4,13 +4,13 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"bitbucket.org/msafaridanquah/verifylab-service/business/domain/businessbus"
-	"bitbucket.org/msafaridanquah/verifylab-service/business/domain/customerbus"
-	"bitbucket.org/msafaridanquah/verifylab-service/business/domain/verificationbus"
-	verbus_vo "bitbucket.org/msafaridanquah/verifylab-service/business/domain/verificationbus/valueobject"
-	"bitbucket.org/msafaridanquah/verifylab-service/foundation/ierr"
-	"bitbucket.org/msafaridanquah/verifylab-service/foundation/logger"
-	"bitbucket.org/msafaridanquah/verifylab-service/foundation/web"
+	"bitbucket.org/msafaridanquah/sight-backend/business/domain/businessbus"
+	"bitbucket.org/msafaridanquah/sight-backend/business/domain/customerbus"
+	"bitbucket.org/msafaridanquah/sight-backend/business/domain/verificationbus"
+	verbus_vo "bitbucket.org/msafaridanquah/sight-backend/business/domain/verificationbus/valueobject"
+	"bitbucket.org/msafaridanquah/sight-backend/foundation/ierr"
+	"bitbucket.org/msafaridanquah/sight-backend/foundation/logger"
+	"bitbucket.org/msafaridanquah/sight-backend/foundation/web"
 	"github.com/google/uuid"
 )
 

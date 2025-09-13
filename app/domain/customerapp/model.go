@@ -4,11 +4,11 @@ import (
 	"fmt"
 	"time"
 
-	"bitbucket.org/msafaridanquah/verifylab-service/business/domain/customerbus"
-	"bitbucket.org/msafaridanquah/verifylab-service/business/domain/customerbus/valueobject"
-	"bitbucket.org/msafaridanquah/verifylab-service/business/domain/documentbus"
-	dvo "bitbucket.org/msafaridanquah/verifylab-service/business/domain/documentbus/valueobject"
-	"bitbucket.org/msafaridanquah/verifylab-service/foundation/ierr"
+	"bitbucket.org/msafaridanquah/sight-backend/business/domain/customerbus"
+	"bitbucket.org/msafaridanquah/sight-backend/business/domain/customerbus/valueobject"
+	"bitbucket.org/msafaridanquah/sight-backend/business/domain/documentbus"
+	dvo "bitbucket.org/msafaridanquah/sight-backend/business/domain/documentbus/valueobject"
+	"bitbucket.org/msafaridanquah/sight-backend/foundation/ierr"
 )
 
 type Customer struct {

@@ -1,4 +1,4 @@
-FROM --platform=linux/amd64 golang:1.24-alpine
+FROM --platform=linux/amd64 golang:1.25-alpine
 
 ENV CGO_ENABLED=0 \
     GOOS=linux \

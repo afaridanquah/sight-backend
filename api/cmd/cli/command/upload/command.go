@@ -1,7 +1,7 @@
 package upload
 
 import (
-	"bitbucket.org/msafaridanquah/verifylab-service/api/cmd/cli/command"
+	"bitbucket.org/msafaridanquah/sight-backend/api/cmd/cli/command"
 	"github.com/spf13/cobra"
 )
 

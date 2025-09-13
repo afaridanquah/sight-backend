@@ -3,7 +3,7 @@ package countryapp
 import (
 	"net/http"
 
-	"bitbucket.org/msafaridanquah/verifylab-service/foundation/logger"
+	"bitbucket.org/msafaridanquah/sight-backend/foundation/logger"
 )
 
 type App struct {
