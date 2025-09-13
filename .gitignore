@@ -24,6 +24,7 @@ target/
 dist/
 vendor
 tmp
+ops
 
 
 # Unit test reports
