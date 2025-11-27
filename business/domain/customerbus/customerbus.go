@@ -48,3 +48,11 @@ type UpdateCustomer struct {
 	Address         *valueobject.Address
 	Identifications *[]valueobject.Identification
 }
+
+type SearchCustomer struct {
+	FirstName  *string
+	LastName   *string
+	MiddleName *string
+	FromDate   *time.Time
+	ToDate     *time.Time
+}

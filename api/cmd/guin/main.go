@@ -10,9 +10,6 @@ import (
 	"time"
 )
 
-var start = 0
-var end = 1000
-
 var target = 17272615
 var workers = 3
 var collected = 0
@@ -77,47 +74,42 @@ type Response struct {
 }
 
 func main() {
-	// var wg sync.WaitGroup
+	// var start = 0
+	// var end = 1000
 	fmt.Println("Starting............")
 
-	if err := fetchData(start, end); err != nil {
-		fmt.Printf("fetchdata: %v", err)
+	for i := 0; i < 17272615; i += 20000 {
+		if err := fetchData(i); err != nil {
+			fmt.Printf("err: %v\n", err)
+		}
+		time.Sleep(time.Second * 3)
 	}
-	// for range workers {
-	// 	wg.Add(1)
-	// 	if collected >= target {
-	// 		return
-	// 	}
-	// 	go func() {
-	// 		defer wg.Done()
-	// 		if err := fetchData(start, end); err != nil {
-	// 			panic(1)
-	// 		}
-	// 		fmt.Printf("url: %d", end)
 
-	// 		start = end
-	// 		end = start + 1000
-	// 		collected = end
-	// 	}()
+	// var wg sync.WaitGroup
+	// for i := 0; i < 17272615; i += 100 {
+	// 	wg.Add(1)
+	// 	time.Sleep(time.Second * 5)
+
+	// 	go func(x int) {
+	// 		if err := fetchData(x); err != nil {
+	// 			fmt.Printf("err: %v\n", err)
+	// 		}
+	// 		wg.Done()
+	// 	}(i)
 	// }
 
-	// for i := 0; i < workers; i++ {
-	// 	wg.Add(1)
-	// 	go func() {
-	// 		defer wg.Done()
-	// 		if err := fetchData(start, end); err != nil {
-	// 			fmt.Printf("fetchdata: %v", err)
-	// 		}
-	// 	}()
+	// wg.Wait()
+
+	fmt.Println("All workers have finished.")
+
+	// if err := fetchData(start, end); err != nil {
+	// 	fmt.Printf("fetchdata: %v", err)
 	// }
 
 }
 
-func fetchData(start int, end int) error {
-
-	search := "{\"value\":\"\",\"regex\":false}"
-	// endpoint := fmt.Sprintf("https://guinportal.gra.gov.gh/GetAllNiaData?draw=1start=%dlength=%dsearch=%s", start, end, search)
-	endpoint := "https://guinportal.gra.gov.gh/GetAllNiaData"
+func fetchData(start int) error {
+	endpoint := "https://guinportal.gra.gov.gh/GetAllNiaData?draw=4&columns[0][data]=forenames&columns[0][name]=&columns[0][searchable]=true&columns[0][orderable]=true&columns[0][search][value]=&columns[0][search][regex]=false&columns[1][data]=date_of_birth&columns[1][name]=&columns[1][searchable]=true&columns[1][orderable]=true&columns[1][search][value]=&columns[1][search][regex]=false&columns[2][data]=national_id&columns[2][name]=&columns[2][searchable]=true&columns[2][orderable]=true&columns[2][search][value]=&columns[2][search][regex]=false&columns[3][data]=tin_number&columns[3][name]=&columns[3][searchable]=true&columns[3][orderable]=true&columns[3][search][value]=&columns[3][search][regex]=false&columns[4][data]=phone_number_1&columns[4][name]=&columns[4][searchable]=true&columns[4][orderable]=true&columns[4][search][value]=&columns[4][search][regex]=false&columns[5][data]=Status&columns[5][name]=&columns[5][searchable]=true&columns[5][orderable]=true&columns[5][search][value]=&columns[5][search][regex]=false"
 
 	pu, err := url.Parse(endpoint)
 	if err != nil {
@@ -125,23 +117,24 @@ func fetchData(start int, end int) error {
 	}
 	q := pu.Query()
 	q.Add("draw", "1")
-	q.Add("start", string(start))
-	q.Add("length", string(end))
-	q.Add("search", search)
+	q.Add("start", fmt.Sprintf("%d", start))
+	q.Add("length", "20000")
+	q.Add("search", "{'value':'','regex':false}")
 
 	pu.RawQuery = q.Encode()
 
-	fmt.Printf("url: %s", pu.String())
+	fmt.Printf("url: %s\n", pu.String())
+
 	req, err := http.NewRequest("GET", pu.String(), nil) // nil for no request body
 	if err != nil {
 		return err
 	}
 
 	// Add custom headers
-	req.Header.Add("Cookie", "JSESSIONID=6E2F0CF8EEA34C465EDE0B1C8925FDCF; _ga=GA1.3.341035717.1750376383; _ga_ZF0KSVVM14=GS2.3.s1754539045$o3$g1$t1754539064$j41$l0$h0; _gid=GA1.3.482285717.1754539045; _gat=1")
+	req.Header.Add("Cookie", "_ga=GA1.3.341035717.1750376383; _ga_ZF0KSVVM14=GS2.3.s1762721238$o20$g1$t1762721263$j35$l0$h0; _ga_JXGVPSYQ59=GS2.1.s1754608648$o1$g1$t1754608690$j18$l0$h0; JSESSIONID=2E04AC6243E3D1633465A1B2EAAE3AB8; _gid=GA1.3.379434554.1762700094; _gat=1")
 	req.Header.Add("Content-Type", "application/json;charset=UTF-8")
 	req.Header.Add("Accept", "*/*")
-	req.Header.Add("User-Agent", "insomnia/11.0.2")
+	// req.Header.Add("User-Agent", "insomnia/11.0.2")
 
 	// Create an HTTP client
 	client := &http.Client{}
@@ -163,10 +156,7 @@ func fetchData(start int, end int) error {
 		return err
 	}
 
-	fmt.Printf("body: %v", body)
-
 	var response Response
-
 	if err := json.Unmarshal(body, &response); err != nil {
 		return err
 	}
@@ -175,11 +165,10 @@ func fetchData(start int, end int) error {
 	if err != nil {
 		return err
 	}
-	// filename := fmt.Sprintf("%d.json", end)
-	if err := os.WriteFile("output.json", jsonData, 0644); err != nil {
+	filename := fmt.Sprintf("exports/%d.json", start)
+	if err := os.WriteFile(filename, jsonData, 0644); err != nil {
 		return err
 	}
 
 	return nil
-
 }

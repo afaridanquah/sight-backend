@@ -6,6 +6,8 @@
 # Node artifact files
 node_modules/
 dist/
+.env
+.env.example
 
 # Compiled Java class files
 *.class
@@ -25,6 +27,7 @@ dist/
 vendor
 tmp
 ops
+exports/
 
 
 # Unit test reports

@@ -1,23 +1,40 @@
 package twilio
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 
+	"bitbucket.org/msafaridanquah/sight-backend/foundation/envvar"
+	"bitbucket.org/msafaridanquah/sight-backend/foundation/logger"
 	"github.com/twilio/twilio-go"
 	twilioApi "github.com/twilio/twilio-go/rest/api/v2010"
 )
+
+type Config struct {
+	Env *envvar.Configuration
+	Log *logger.Logger
+}
 
 type Twilio struct {
 	params *twilioApi.CreateMessageParams
 	client *twilio.RestClient
 }
 
-func New() (*Twilio, error) {
+func New(conf Config) (*Twilio, error) {
 
-	accountSid := "AC669496069f297202e6526c6428896165"
-	authToken := "34132a0483074e37520f3353555a7895"
-	fromNumber := "+13864338434"
+	get := func(v string) string {
+		res, err := conf.Env.Get(v)
+		if err != nil {
+			conf.Log.Error(context.Background(), "env failed")
+		}
+
+		return res
+	}
+
+	accountSid := get("TWILIO_ACCOUNT_ID")
+	authToken := get("TWILIO_AUTH_TOKEN")
+	fromNumber := get("TWILIO_FROM_NUMBER")
 
 	client := twilio.NewRestClientWithParams(twilio.ClientParams{
 		Username: accountSid,
