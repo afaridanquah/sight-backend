@@ -5,7 +5,6 @@ import (
 	"time"
 
 	"bitbucket.org/msafaridanquah/sight-backend/business/domain/customerbus/valueobject"
-	"github.com/google/uuid"
 )
 
 var (
@@ -14,10 +13,10 @@ var (
 )
 
 type Customer struct {
-	ID              uuid.UUID
+	ID              valueobject.ID
 	Person          valueobject.Person
-	UserID          uuid.UUID
-	OrgID           uuid.UUID
+	UserID          valueobject.ID
+	OrgID           valueobject.ID
 	DateOfBirth     valueobject.DateOfBirth
 	CityOfBirth     string
 	Identifications []valueobject.Identification

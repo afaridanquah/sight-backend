@@ -17,20 +17,24 @@ type ID struct {
 	value  ksuid.KSUID
 }
 
-func NewID() ID {
+func NewCustomerID() ID {
 	return ID{
-		prefix: "cus",
+		prefix: "cus_",
 		value:  ksuid.New(),
 	}
 }
 
 func (id ID) String() string {
-	return fmt.Sprintf("%s_%s", id.prefix, id.value.String())
+	return strings.Join([]string{id.prefix, id.value.String()}, "_")
 }
 
-func ParseID(s string) (ID, error) {
+func ParseCustomerID(s string) (ID, error) {
 	if s == "" {
-		return ID{}, ErrCustomerIDRequired
+		return ID{}, fmt.Errorf("arg cannot be empty")
+	}
+
+	if !strings.HasPrefix(s, "usr_") {
+		return ID{}, fmt.Errorf("%s is not a valid prefix", s)
 	}
 	d := strings.Split(s, "_")
 
