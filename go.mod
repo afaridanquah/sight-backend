@@ -14,6 +14,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/feature/s3/manager v1.19.4
 	github.com/aws/aws-sdk-go-v2/service/s3 v1.87.3
 	github.com/biter777/countries v1.7.5
+	github.com/elastic/go-elasticsearch/v9 v9.2.0
 	github.com/exaring/otelpgx v0.9.3
 	github.com/go-chi/render v1.0.3
 	github.com/go-playground/locales v0.14.1
@@ -58,6 +59,7 @@ require (
 	github.com/cenkalti/backoff/v3 v3.1.1 // indirect
 	github.com/cenkalti/backoff/v4 v4.3.0 // indirect
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect
+	github.com/elastic/elastic-transport-go/v8 v8.7.0 // indirect
 	github.com/felixge/httpsnoop v1.0.4 // indirect
 	github.com/gabriel-vasile/mimetype v1.4.8 // indirect
 	github.com/go-jose/go-jose/v4 v4.0.1 // indirect

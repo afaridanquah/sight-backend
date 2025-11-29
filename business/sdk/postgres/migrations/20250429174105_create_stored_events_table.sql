@@ -1,9 +1,9 @@
 -- +goose Up
 -- +goose StatementBegin
 CREATE TABLE stored_events (
-    id UUID,
+    id CHAR(31) NOT NULL PRIMARY KEY,
     type VARCHAR(55),
-    aggregate_id UUID,
+    aggregate_id CHAR(31),
     aggregate_type TEXT,
     aggregate_version BIGINT,
     data JSONB NOT NULL DEFAULT '{}'::jsonb,

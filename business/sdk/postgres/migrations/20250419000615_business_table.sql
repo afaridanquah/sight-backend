@@ -6,7 +6,7 @@ CREATE TYPE entity AS ENUM ('ESTATE', 'SOLE_PROPRIETOR', 'CORPORATION', 'EXEMPT_
 
 
 CREATE TABLE businesses (
-    id UUID PRIMARY KEY,
+    id CHAR(31) PRIMARY KEY,
     org_id UUID,
     legal_name TEXT NOT NULL,
     entity entity NOT NULL,

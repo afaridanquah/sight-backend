@@ -5,14 +5,14 @@ CREATE TYPE outcome AS ENUM ('CLEARED', 'ATTENTION_NEEDED');
 CREATE TYPE decision AS ENUM ('APPROVED', 'DECLINED', 'UNKNOWN');
 
 CREATE TABLE verifications (
-    id UUID PRIMARY KEY,
+    id CHAR(31) PRIMARY KEY,
     verification_type VARCHAR(30),
-    customer_id UUID NOT NULL,
+    customer_id CHAR(31) NOT NULL,
     customer JSONB,
     business JSONB,
     business_id VARCHAR(50),
     org_id VARCHAR(50),
-    creator_id UUID NOT NULL,
+    creator_id CHAR(31) NOT NULL,
     outcome outcome,
     aml_insight JSONB,
     phone_insight JSONB,

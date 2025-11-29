@@ -1,11 +1,12 @@
 -- +goose Up
 CREATE TABLE customers (
-    id UUID PRIMARY KEY,
+    id CHAR(31) PRIMARY KEY,
     first_name VARCHAR(30) NOT NULL,
     last_name VARCHAR(30) NOT NULL,
     middle_name VARCHAR(30),
-    org_id UUID,
-    creator_id UUID,
+    other_names VARCHAR(30),
+    org_id CHAR(31),
+    creator_id CHAR(31),
     email TEXT,
     phone_number VARCHAR(20),
     city_of_birth VARCHAR(50),

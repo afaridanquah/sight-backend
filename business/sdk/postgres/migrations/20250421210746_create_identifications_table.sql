@@ -9,7 +9,7 @@ CREATE TYPE identification_type AS ENUM (
 );
 
 CREATE TABLE identifications (
-    id UUID PRIMARY KEY NOT NULL,
+    id CHAR(31) PRIMARY KEY NOT NULL,
     first_name VARCHAR(45),
     last_name VARCHAR(45),
     middle_name VARCHAR(45),

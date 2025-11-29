@@ -3,7 +3,7 @@
 -- CREATE TYPE status AS ENUM ('APPROVED', 'PENDING', 'REJECTED', 'DRAFT');
 
 CREATE TABLE organizations (
-    id UUID PRIMARY KEY,
+    id CHAR(31) PRIMARY KEY,
     name VARCHAR(255) NOT NULL,
     status status,
     created_at TIMESTAMP NOT NULL DEFAULT NOW(),
