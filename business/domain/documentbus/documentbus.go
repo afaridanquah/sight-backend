@@ -4,22 +4,22 @@ import (
 	"time"
 
 	"bitbucket.org/msafaridanquah/sight-backend/business/domain/documentbus/valueobject"
-	"github.com/google/uuid"
 )
 
 type Document struct {
-	ID             uuid.UUID
-	Parent         uuid.UUID
+	ID             valueobject.ID
+	Parent         valueobject.ID
 	DocumentType   valueobject.DocumentType
 	Side           valueobject.Side
 	Classification valueobject.Classification
-	CustomerID     uuid.UUID
+	CustomerID     string
 	OriginalName   string
 	FileName       string
 	Customer       valueobject.User
-	BusinessID     uuid.UUID
-	OrgID          uuid.UUID
+	BusinessID     string
+	OrgID          string
 	Status         valueobject.Status
+	MetaData       any
 	CreatedAt      time.Time
 	UpdatedAt      time.Time
 }
@@ -27,8 +27,13 @@ type Document struct {
 type NewDocument struct {
 	DocumentType   valueobject.DocumentType
 	Classification valueobject.Classification
-	CustomerID     uuid.UUID
-	BusinessID     uuid.UUID
+	CustomerID     string
+	BusinessID     string
 	Side           valueobject.Side
 	File           valueobject.File
+}
+
+type UpdateDocumentStatus struct {
+	ID     valueobject.ID
+	Status valueobject.Status
 }

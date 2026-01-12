@@ -19,7 +19,7 @@ type ID struct {
 
 func NewCustomerID() ID {
 	return ID{
-		prefix: "cus_",
+		prefix: "cus",
 		value:  ksuid.New(),
 	}
 }
@@ -33,7 +33,28 @@ func ParseCustomerID(s string) (ID, error) {
 		return ID{}, fmt.Errorf("arg cannot be empty")
 	}
 
-	if !strings.HasPrefix(s, "usr_") {
+	if !strings.HasPrefix(s, "cus_") {
+		return ID{}, fmt.Errorf("%s is not a valid prefix", s)
+	}
+	d := strings.Split(s, "_")
+
+	k, err := ksuid.Parse(d[1])
+	if err != nil {
+		return ID{}, err
+	}
+
+	return ID{
+		prefix: d[0],
+		value:  k,
+	}, nil
+}
+
+func ParseOrgID(s string) (ID, error) {
+	if s == "" {
+		return ID{}, fmt.Errorf("arg cannot be empty")
+	}
+
+	if !strings.HasPrefix(s, "org_") {
 		return ID{}, fmt.Errorf("%s is not a valid prefix", s)
 	}
 	d := strings.Split(s, "_")

@@ -4,11 +4,13 @@ import (
 	"fmt"
 	"time"
 
+	"bitbucket.org/msafaridanquah/sight-backend/app/sdk/errs"
 	"bitbucket.org/msafaridanquah/sight-backend/business/domain/customerbus"
 	"bitbucket.org/msafaridanquah/sight-backend/business/domain/customerbus/valueobject"
 	"bitbucket.org/msafaridanquah/sight-backend/business/domain/documentbus"
 	dvo "bitbucket.org/msafaridanquah/sight-backend/business/domain/documentbus/valueobject"
-	"bitbucket.org/msafaridanquah/sight-backend/foundation/ierr"
+	"bitbucket.org/msafaridanquah/sight-backend/business/domain/identificationbus"
+	ivo "bitbucket.org/msafaridanquah/sight-backend/business/domain/identificationbus/valueobject"
 )
 
 type Customer struct {
@@ -33,24 +35,6 @@ type PhoneNumber struct {
 	Country string `json:"country" validate:"required"`
 }
 
-type NewIdentification struct {
-	Pin                string  `json:"pin" validate:"required"`
-	IssuedCountry      string  `json:"issued_country" validate:"required"`
-	IdentificationType string  `json:"identification_type" validate:"required"`
-	Nationality        *string `json:"nationality,omitempty"`
-	IssuedDate         *string `json:"issued_date,omitempty" validate:"datetime=2006-01-02"`
-	ExpDate            *string `json:"exp_date,omitempty" validate:"datetime=2006-01-02"`
-}
-
-type Identification struct {
-	Pin                string  `json:"pin" validate:"required"`
-	IssuedCountry      Country `json:"issued_country" validate:"required"`
-	IdentificationType string  `json:"identification_type" validate:"required"`
-	Nationality        Country `json:"nationality"`
-	IssuedDate         string  `json:"issued_date"`
-	ExpDate            string  `json:"exp_date"`
-}
-
 type NewCustomer struct {
 	FirstName       string              `json:"first_name" validate:"required"`
 	MiddleName      string              `json:"middle_name"`
@@ -64,7 +48,7 @@ type NewCustomer struct {
 }
 
 func (o NewCustomer) Validate() error {
-	if err := ierr.Check(o); err != nil {
+	if err := errs.Check(o); err != nil {
 		return fmt.Errorf("validate new customer failed: %w", err)
 	}
 
@@ -139,31 +123,12 @@ func toBusNewCustomer(c NewCustomer) (customerbus.NewCustomer, error) {
 		return customerbus.NewCustomer{}, fmt.Errorf("newPerson: %w", err)
 	}
 
-	identifications := make([]valueobject.Identification, len(c.Identifications))
-
-	if len(c.Identifications) > 0 {
-		for i, idx := range c.Identifications {
-			id, err := valueobject.NewIdentification(
-				idx.IdentificationType,
-				idx.Pin,
-				idx.IssuedCountry,
-				idx.IssuedDate,
-				idx.Nationality,
-				idx.ExpDate,
-			)
-			if err != nil {
-				return customerbus.NewCustomer{}, fmt.Errorf("new identification: %w", err)
-			}
-			identifications[i] = id
-		}
-	}
-
 	customer := customerbus.NewCustomer{
-		Person:          person,
-		BirthCountry:    country,
-		Email:           email,
-		DateOfBirth:     dob,
-		Identifications: identifications,
+		Person:       person,
+		BirthCountry: country,
+		Email:        email,
+		DateOfBirth:  dob,
+		// Identifications: identifications,
 	}
 
 	if c.PhoneNumber != nil {
@@ -177,6 +142,143 @@ func toBusNewCustomer(c NewCustomer) (customerbus.NewCustomer, error) {
 	return customer, nil
 }
 
+// -----------------------------------------------------------------------------------
+// Parse identification request to business logic
+
+type NewIdentification struct {
+	Pin                string  `json:"pin" validate:"required"`
+	IssuedCountry      string  `json:"issued_country" validate:"required"`
+	IdentificationType string  `json:"identification_type" validate:"required"`
+	Nationality        *string `json:"nationality,omitempty"`
+	IssuedDate         *string `json:"issued_date,omitempty" validate:"datetime=2006-01-02"`
+	ExpDate            *string `json:"exp_date,omitempty" validate:"datetime=2006-01-02"`
+}
+
+type NewIdentifications struct {
+	Identifications []NewIdentification `json:"identifications" validate:"required,dive"`
+}
+
+type Identification struct {
+	ID                 string  `json:"id"`
+	Pin                string  `json:"pin"`
+	IssuedCountry      Country `json:"issued_country"`
+	IdentificationType string  `json:"identification_type"`
+	Nationality        Country `json:"nationality"`
+	IssuedDate         string  `json:"issued_date"`
+	ExpDate            string  `json:"exp_date"`
+}
+
+func toAppIdentification(bus identificationbus.Identification) Identification {
+	return Identification{
+		ID:  bus.ID.String(),
+		Pin: bus.Pin,
+		IssuedCountry: Country{
+			AlphaCode2: bus.Country.Alpha2(),
+			Name:       bus.Country.Name(),
+		},
+		IdentificationType: bus.IdentificationType.String(),
+		Nationality: Country{
+			AlphaCode2: bus.Nationality.Alpha2(),
+			Name:       bus.Nationality.Name(),
+		},
+		IssuedDate: bus.IssuedDate.Format(time.RFC3339),
+		ExpDate:    bus.ExpDate.Format(time.RFC3339),
+	}
+}
+
+func (o NewIdentifications) Validate() error {
+	if err := errs.Check(o); err != nil {
+		return fmt.Errorf("validate new identication failed: %w", err)
+	}
+
+	return nil
+}
+
+func toBusNewIdentifications(idx NewIdentifications, bcus customerbus.Customer) ([]identificationbus.NewIdentification, error) {
+	identifications := make([]identificationbus.NewIdentification, len(idx.Identifications))
+	if len(idx.Identifications) > 0 {
+		for k, v := range idx.Identifications {
+			idt, err := ivo.ParseIdentificationType(v.IdentificationType)
+			if err != nil {
+				return []identificationbus.NewIdentification{}, err
+			}
+
+			issued, err := time.Parse(time.DateOnly, *v.IssuedDate)
+			if err != nil {
+				return []identificationbus.NewIdentification{}, err
+			}
+
+			exp, err := time.Parse(time.DateOnly, *v.ExpDate)
+			if err != nil {
+				return []identificationbus.NewIdentification{}, err
+			}
+
+			issc, err := ivo.NewCountry(v.IssuedCountry)
+			if err != nil {
+				return []identificationbus.NewIdentification{}, err
+			}
+
+			identifications[k] = identificationbus.NewIdentification{
+				CustomerID:         bcus.ID.String(),
+				Pin:                v.Pin,
+				IdentificationType: idt,
+				IssuedDate:         issued,
+				ExpDate:            exp,
+				Country:            issc,
+			}
+
+			if v.Nationality != nil {
+				national, err := ivo.NewCountry(*v.Nationality)
+				if err != nil {
+					return []identificationbus.NewIdentification{}, err
+				}
+				identifications[k].Nationality = national
+			}
+		}
+	}
+
+	return identifications, nil
+}
+
+// func toBusNewIdentifications(c NewCustomer, bcus customerbus.Customer) ([]identificationbus.NewIdentification, error) {
+// 	identifications := make([]identificationbus.NewIdentification, len(c.Identifications))
+// 	if c.Identifications != nil {
+// 		if len(c.Identifications) > 0 {
+// 			for k, v := range c.Identifications {
+// 				idt, err := ivo.ParseIdentificationType(v.IdentificationType)
+// 				if err != nil {
+// 					return []identificationbus.NewIdentification{}, err
+// 				}
+
+// 				issued, err := time.Parse(time.DateOnly, *v.IssuedDate)
+// 				if err != nil {
+// 					return []identificationbus.NewIdentification{}, err
+// 				}
+
+// 				exp, err := time.Parse(time.DateOnly, *v.ExpDate)
+// 				if err != nil {
+// 					return []identificationbus.NewIdentification{}, err
+// 				}
+
+// 				issc, err := ivo.NewCountry(v.IssuedCountry)
+// 				if err != nil {
+// 					return []identificationbus.NewIdentification{}, err
+// 				}
+
+// 				identifications[k] = identificationbus.NewIdentification{
+// 					CustomerID:         bcus.ID.String(),
+// 					Pin:                v.Pin,
+// 					IdentificationType: idt,
+// 					IssuedDate:         issued,
+// 					ExpDate:            exp,
+// 					Country:            issc,
+// 				}
+// 			}
+// 		}
+// 	}
+// 	return identifications, nil
+// }
+
 // =======================================================================================
 
 type Address struct {
@@ -189,17 +291,51 @@ type Address struct {
 }
 
 type UpdateCustomer struct {
-	FirstName   string  `json:"first_name" validate:"required"`
-	MiddleName  string  `json:"middle_name"`
-	LastName    string  `json:"last_name" validate:"required"`
-	DateOfBirth string  `json:"date_of_birth" validate:"required,datetime=2006-01-02"`
-	Email       string  `json:"email" validate:"required"`
-	Country     string  `json:"country" validate:"required"`
-	Address     Address `json:"address"`
+	FirstName   *string  `json:"first_name"`
+	MiddleName  *string  `json:"middle_name"`
+	LastName    *string  `json:"last_name"`
+	OtherNames  *string  `json:"other_names"`
+	DateOfBirth *string  `json:"date_of_birth" validate:"omitempty,datetime=2006-01-02"`
+	Email       *string  `json:"email"`
+	Country     *string  `json:"birth_country" validate:"omitempty"`
+	Address     *Address `json:"address" validate:"omitempty"`
+}
+
+func (o UpdateCustomer) Validate() error {
+	if err := errs.Check(o); err != nil {
+		return fmt.Errorf("validate update customer failed: %w", err)
+	}
+
+	return nil
+}
+
+func toBusUpdateCustomer(uapp UpdateCustomer) (customerbus.UpdateCustomer, error) {
+	var ubus customerbus.UpdateCustomer
+	if uapp.FirstName != nil || uapp.LastName != nil || uapp.MiddleName != nil || uapp.OtherNames != nil {
+		p, err := valueobject.NewPerson(*uapp.FirstName, *uapp.LastName, uapp.MiddleName, uapp.OtherNames)
+		if err != nil {
+			return customerbus.UpdateCustomer{}, err
+		}
+		ubus.Person = &p
+	}
+
+	bc, err := valueobject.NewCountry(*uapp.Country)
+	if err != nil {
+		return customerbus.UpdateCustomer{}, err
+	}
+	ubus.BirthCountry = &bc
+
+	email, err := valueobject.NewEmail(*uapp.Email)
+	if err != nil {
+		return customerbus.UpdateCustomer{}, err
+	}
+	ubus.Email = &email
+
+	return ubus, nil
 }
 
 // ===========================================================================================
-// Attach a document to a customer
+// Attach a document to a customer.
 type NewDocument struct {
 	Classification string `json:"classification" form:"classification" validate:"required"`
 	DocumentType   string `json:"document_type" form:"document_type" validate:"required"`
@@ -223,7 +359,7 @@ type Document struct {
 }
 
 func (o NewDocument) Validate() error {
-	if err := ierr.Check(o); err != nil {
+	if err := errs.Check(o); err != nil {
 		return fmt.Errorf("validate new document failed: %w", err)
 	}
 

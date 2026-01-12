@@ -11,19 +11,18 @@ import (
 	"syscall"
 	"time"
 
-	"bitbucket.org/msafaridanquah/sight-backend/api/services/rest/businessapi"
 	"bitbucket.org/msafaridanquah/sight-backend/api/services/rest/customerapi"
-	"bitbucket.org/msafaridanquah/sight-backend/api/services/rest/otpapi"
-	"bitbucket.org/msafaridanquah/sight-backend/api/services/rest/verificationapi"
+	"bitbucket.org/msafaridanquah/sight-backend/api/services/rest/organizationapi"
 	"bitbucket.org/msafaridanquah/sight-backend/app/sdk"
 	"bitbucket.org/msafaridanquah/sight-backend/app/sdk/mid"
 	"bitbucket.org/msafaridanquah/sight-backend/foundation/envvar"
 	"bitbucket.org/msafaridanquah/sight-backend/foundation/logger"
 	"bitbucket.org/msafaridanquah/sight-backend/foundation/otel"
 	"bitbucket.org/msafaridanquah/sight-backend/foundation/vaulti"
-	"bitbucket.org/msafaridanquah/sight-backend/foundation/web"
 	"github.com/go-chi/chi/v5"
+	"github.com/go-chi/chi/v5/middleware"
 	"github.com/go-chi/render"
+	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/riandyrn/otelchi"
 )
@@ -55,6 +54,7 @@ func main() {
 }
 
 func run(ctx context.Context, env string, address string, log *logger.Logger) error {
+
 	service := serviceName
 
 	// -------------------------------------------------------------------------
@@ -101,16 +101,26 @@ func run(ctx context.Context, env string, address string, log *logger.Logger) er
 		return fmt.Errorf("new postgres sql %w", err)
 	}
 
+	nats, err := sdk.InitNatServer()
+
 	// -------------------------------------------------------------------------
 	// Configuration
-	cfg := web.Config{
-		Name:        "",
+	//
+	cfg := struct {
+		Address     string
+		PostgresDB  *pgxpool.Pool
+		Metrics     http.Handler
+		Middlewares []func(next http.Handler) http.Handler
+		Logger      *logger.Logger
+		// Tracer      trace.Tracer
+		// Vault       vaulti.Vaulty
+	}{
 		Address:     ":" + address,
 		Metrics:     promhttp.Handler(),
 		Middlewares: []func(next http.Handler) http.Handler{mid.Otel(tracer), mid.Logger(log)},
 		Logger:      log,
 		PostgresDB:  pool,
-		Tracer:      tracer,
+		// Tracer:      tracer,
 	}
 
 	// -------------------------------------------------------------------------
@@ -124,6 +134,7 @@ func run(ctx context.Context, env string, address string, log *logger.Logger) er
 	router := chi.NewRouter()
 	router.Use(render.SetContentType(render.ContentTypeJSON))
 	router.Use(otelchi.Middleware(tempo.ServiceName, otelchi.WithChiRoutes(router)))
+	router.Use(middleware.Recoverer)
 
 	for _, mw := range cfg.Middlewares {
 		router.Use(mw)
@@ -143,10 +154,18 @@ func run(ctx context.Context, env string, address string, log *logger.Logger) er
 		return err
 	}
 
-	businessapi.Routes(cfg.Logger, cfg.PostgresDB, conf, vaulti, v1Router)
-	customerapi.Routes(cfg.Logger, cfg.PostgresDB, conf, vaulti, v1Router)
-	verificationapi.Routes(cfg.Logger, cfg.PostgresDB, conf, vaulti, v1Router)
-	otpapi.Routes(cfg.Logger, cfg.PostgresDB, conf, vaulti, v1Router)
+	// businessapi.Routes(cfg.Logger, cfg.PostgresDB, conf, vaulti, v1Router)
+	customerapi.Routes(customerapi.CustomerApiConfig{
+		Log:      cfg.Logger,
+		Pool:     cfg.PostgresDB,
+		Envvar:   conf,
+		Vault:    vaulti,
+		Mux:      v1Router,
+		NatsConn: nats,
+	})
+	// verificationapi.Routes(cfg.Logger, cfg.PostgresDB, conf, vaulti, v1Router)
+	// otpapi.Routes(cfg.Logger, cfg.PostgresDB, conf, vaulti, v1Router)
+	organizationapi.Routes(cfg.Logger, cfg.PostgresDB, conf, vaulti, v1Router)
 
 	router.Mount("/v1", v1Router)
 

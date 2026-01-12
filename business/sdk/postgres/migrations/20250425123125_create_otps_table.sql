@@ -4,7 +4,7 @@ CREATE TYPE channel AS ENUM ('SMS', 'EMAIL');
 
 CREATE TABLE otps (
     id CHAR(31) NOT NULL PRIMARY KEY,
-    customer_id CHAR(31),
+    entity_id CHAR(31),
     hashed_code TEXT,
     code TEXT,
     channel channel,

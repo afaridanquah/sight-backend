@@ -86,26 +86,26 @@ type IdentificationType struct {
 }
 
 var (
-	PASSPORT       = IdentificationType{"PASSPORT"}
-	DRIVERSLICENSE = IdentificationType{"DRIVERS_LICENSE"}
-	NATIONALID     = IdentificationType{"NATIONAL_ID"}
-	RESIDENTPERMIT = IdentificationType{"RESIDENT_PERMIT"}
-	SSN            = IdentificationType{"SSN"}
+	IDT_PASSPORT       = IdentificationType{"PASSPORT"}
+	IDT_DRIVERSLICENSE = IdentificationType{"DRIVERS_LICENSE"}
+	IDT_NATIONALID     = IdentificationType{"NATIONAL_ID"}
+	IDT_RESIDENTPERMIT = IdentificationType{"RESIDENT_PERMIT"}
+	IDT_SSN            = IdentificationType{"SSN"}
 )
 
 func ParseIdentificationType(s string) (IdentificationType, error) {
 	lower := strings.ToUpper(s)
 	switch lower {
 	case "PASSPORT":
-		return PASSPORT, nil
+		return IDT_PASSPORT, nil
 	case "DRIVERS_LICENSE":
-		return DRIVERSLICENSE, nil
+		return IDT_DRIVERSLICENSE, nil
 	case "NATIONAL_ID":
-		return NATIONALID, nil
+		return IDT_NATIONALID, nil
 	case "RESIDENT_PERMIT":
-		return RESIDENTPERMIT, nil
+		return IDT_RESIDENTPERMIT, nil
 	case "SSN":
-		return SSN, nil
+		return IDT_SSN, nil
 	default:
 		return IdentificationType{}, fmt.Errorf("%s : is not valid", s)
 	}

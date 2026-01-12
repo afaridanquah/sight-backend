@@ -48,3 +48,7 @@ func MustParseStatus(name string) Status {
 	}
 	return status
 }
+
+func (s Status) String() string {
+	return s.a
+}

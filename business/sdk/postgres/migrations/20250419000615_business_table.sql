@@ -7,19 +7,18 @@ CREATE TYPE entity AS ENUM ('ESTATE', 'SOLE_PROPRIETOR', 'CORPORATION', 'EXEMPT_
 
 CREATE TABLE businesses (
     id CHAR(31) PRIMARY KEY,
-    org_id UUID,
+    org_id CHAR(31),
     legal_name TEXT NOT NULL,
     entity entity NOT NULL,
     tax_id TEXT,
     dba TEXT NOT NULL,
     jurisdiction VARCHAR(2) NOT NULL,
-    admin_id UUID NOT NULL,
+    registration_number VARCHAR(255),
     owners JSONB,
     address JSONB,
     website VARCHAR(200),
     phone_numbers JSONB DEFAULT '[]'::jsonb,
     email_addresses JSONB DEFAULT '[]'::jsonb,
-    documents JSONB DEFAULT '[]'::jsonb,
     created_at TIMESTAMP NOT NULL DEFAULT NOW(),
     updated_at TIMESTAMP NOT NULL DEFAULT NOW()
 );
@@ -28,9 +27,7 @@ CREATE TABLE businesses (
 -- +goose Down
 -- +goose StatementBegin
 DROP TABLE businesses;
-
 DROP TYPE status;
-
 DROP TYPE entity;
 
 -- +goose StatementEnd

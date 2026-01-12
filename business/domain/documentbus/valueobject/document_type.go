@@ -2,6 +2,7 @@ package valueobject
 
 import (
 	"errors"
+	"slices"
 	"strings"
 )
 
@@ -22,7 +23,9 @@ var (
 	OTHER                  = DocumentType{"OTHER"}
 )
 
-var DocumentTypees = []DocumentType{PASSPORT, NATIONAL_IDENTITY_CARD}
+var DocumentTypees = []DocumentType{PASSPORT, NATIONAL_IDENTITY_CARD, DRIVING_LICENSE, RESIDENCE_PERMIT, VISA, OTHER}
+
+var ListOfDocumentsRequiringFrontBack = []DocumentType{NATIONAL_IDENTITY_CARD, DRIVING_LICENSE, RESIDENCE_PERMIT}
 
 func ParseDocumentType(name string) (DocumentType, error) {
 	if name == "" {
@@ -53,6 +56,10 @@ func MustParseDocumentType(name string) DocumentType {
 		panic(err)
 	}
 	return status
+}
+
+func (d DocumentType) RequiresFrontBack() bool {
+	return slices.Contains(ListOfDocumentsRequiringFrontBack, d)
 }
 
 func (s DocumentType) String() string {

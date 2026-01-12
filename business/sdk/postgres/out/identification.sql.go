@@ -8,9 +8,29 @@ package db
 import (
 	"context"
 
-	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgtype"
 )
+
+type BulkInsertIdentificationsParams struct {
+	ID                 string
+	FirstName          pgtype.Text
+	LastName           pgtype.Text
+	MiddleName         pgtype.Text
+	OtherNames         pgtype.Text
+	Pin                string
+	IdentificationType IdentificationType
+	IssuedCountry      pgtype.Text
+	PlaceOfBirth       pgtype.Text
+	PlaceOfIssue       pgtype.Text
+	DateOfBirth        pgtype.Date
+	Address1           pgtype.Text
+	Address2           pgtype.Text
+	City               pgtype.Text
+	StateRegion        pgtype.Text
+	ZipCode            pgtype.Text
+	CreatedAt          pgtype.Timestamp
+	UpdatedAt          pgtype.Timestamp
+}
 
 const InsertIdentification = `-- name: InsertIdentification :exec
 INSERT INTO identifications (
@@ -32,12 +52,29 @@ INSERT INTO identifications (
     zip_code,
     created_at,
     updated_at
-) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16,$17, $18)
-RETURNING id, first_name, last_name, middle_name, other_names, pin, identification_type, issued_country, issued_date, place_of_birth, place_of_issue, date_of_birth, address_1, address_2, city, state_region, zip_code, created_at, updated_at
+) VALUES (
+$1,
+$2,
+$3,
+$4,
+$5,
+$6,
+$7,
+$8,
+$9,
+$10,
+$11,
+$12,
+$13,
+$14,
+$15,
+$16,
+$17,
+$18)
 `
 
 type InsertIdentificationParams struct {
-	ID                 uuid.UUID
+	ID                 string
 	FirstName          pgtype.Text
 	LastName           pgtype.Text
 	MiddleName         pgtype.Text

@@ -5,9 +5,9 @@ import (
 	"log/slog"
 	"time"
 
+	"bitbucket.org/msafaridanquah/sight-backend/business/domain/organizationbus/valueobject"
 	"bitbucket.org/msafaridanquah/sight-backend/foundation/logger"
 	"bitbucket.org/msafaridanquah/sight-backend/foundation/otel"
-	"github.com/google/uuid"
 	"github.com/mercari/go-circuitbreaker"
 )
 
@@ -47,13 +47,19 @@ func New(repo Repository, logger *logger.Logger, cfgs ...ServiceConfig) (*Servic
 }
 
 func (srv *Service) Create(ctx context.Context, nbus NewOrganization) (Organization, error) {
-	ctx, span := otel.AddSpan(ctx, "documentbus.service.create")
+	ctx, span := otel.AddSpan(ctx, "oganizationbus.service.create")
 	defer span.End()
 	now := time.Now()
 
+	status, err := valueobject.ParseStatus("pending")
+	if err != nil {
+		return Organization{}, nil
+	}
+
 	org := Organization{
-		ID:        uuid.New(),
+		ID:        valueobject.NewOrgID(),
 		Name:      nbus.Name,
+		Status:    status,
 		CreatedAt: now,
 		UpdatedAt: now,
 	}

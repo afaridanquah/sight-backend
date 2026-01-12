@@ -8,7 +8,6 @@ package db
 import (
 	"context"
 
-	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
@@ -18,12 +17,12 @@ VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
 `
 
 type InsertVerificationParams struct {
-	ID               uuid.UUID
+	ID               string
 	VerificationType pgtype.Text
-	CustomerID       uuid.UUID
+	CustomerID       string
 	Customer         []byte
 	BusinessID       pgtype.Text
-	CreatorID        uuid.UUID
+	CreatorID        string
 	Outcome          NullOutcome
 	AmlInsight       []byte
 	PhoneInsight     []byte

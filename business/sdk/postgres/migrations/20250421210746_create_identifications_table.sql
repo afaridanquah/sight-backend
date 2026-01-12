@@ -8,8 +8,9 @@ CREATE TYPE identification_type AS ENUM (
     'SSN'
 );
 
-CREATE TABLE identifications (
+CREATE TABLE customer_identifications (
     id CHAR(31) PRIMARY KEY NOT NULL,
+    customer_id CHAR(31),
     first_name VARCHAR(45),
     last_name VARCHAR(45),
     middle_name VARCHAR(45),
@@ -30,11 +31,14 @@ CREATE TABLE identifications (
     updated_at TIMESTAMP NOT NULL
 );
 
+CREATE INDEX customer_identifications_customer_id
+ON customer_identifications(customer_id);
+
 -- +goose StatementEnd
 -- +goose Down
 -- +goose StatementBegin
-DROP TABLE identifications;
-
+DROP TABLE customer_identifications;
+DROP INDEX customer_identifications_customer_id;
 DROP TYPE identification_type;
 
 -- +goose StatementEnd

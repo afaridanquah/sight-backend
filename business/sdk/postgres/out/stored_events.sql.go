@@ -8,7 +8,6 @@ package db
 import (
 	"context"
 
-	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
@@ -18,9 +17,9 @@ const InsertEvent = `-- name: InsertEvent :exec
 `
 
 type InsertEventParams struct {
-	ID               uuid.NullUUID
+	ID               string
 	Type             pgtype.Text
-	AggregateID      uuid.NullUUID
+	AggregateID      pgtype.Text
 	AggregateType    pgtype.Text
 	AggregateVersion pgtype.Int8
 	Data             []byte

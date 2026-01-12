@@ -5,7 +5,6 @@ import (
 	"errors"
 
 	"bitbucket.org/msafaridanquah/sight-backend/business/domain/customerbus/valueobject"
-	"github.com/google/uuid"
 )
 
 var (
@@ -16,16 +15,17 @@ var (
 )
 
 type Repository interface {
-	QueryByIDAndOrgID(ctx context.Context, id uuid.UUID, orgID uuid.UUID) (Customer, error)
+	QueryByIDAndOrgID(ctx context.Context, id valueobject.ID, orgID valueobject.ID) (Customer, error)
 	Add(ctx context.Context, c Customer) error
 	Update(ctx context.Context, cust Customer) error
+	QueryByOrgID(ctx context.Context, orgID valueobject.ID) ([]Customer, error)
 }
 
 type SearchRepository interface {
 	Search(ctx context.Context, sc SearchCustomer) ([]Customer, error)
 }
 
-type CustomerMessageBrokerPublisher interface {
+type MessageBrokerRepository interface {
 	Created(ctx context.Context, c Customer) error
-	Updated(ctx context.Context, id valueobject.ID) error
+	// Updated(ctx context.Context, c Customer) error
 }

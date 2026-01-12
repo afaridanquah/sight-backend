@@ -15,8 +15,8 @@ var (
 type Customer struct {
 	ID              valueobject.ID
 	Person          valueobject.Person
-	UserID          valueobject.ID
-	OrgID           valueobject.ID
+	UserID          string
+	OrgID           string
 	DateOfBirth     valueobject.DateOfBirth
 	CityOfBirth     string
 	Identifications []valueobject.Identification

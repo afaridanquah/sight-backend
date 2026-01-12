@@ -4,11 +4,10 @@ import (
 	"time"
 
 	"bitbucket.org/msafaridanquah/sight-backend/business/domain/organizationbus/valueobject"
-	"github.com/google/uuid"
 )
 
 type Organization struct {
-	ID        uuid.UUID
+	ID        valueobject.ID
 	Name      string
 	Status    valueobject.Status
 	CreatedAt time.Time

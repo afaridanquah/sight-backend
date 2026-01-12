@@ -8,7 +8,6 @@ import (
 	"database/sql/driver"
 	"fmt"
 
-	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
@@ -317,32 +316,31 @@ func (ns NullStatus) Value() (driver.Value, error) {
 }
 
 type Businesses struct {
-	ID                 uuid.UUID
-	OrgID              uuid.NullUUID
+	ID                 string
+	OrgID              pgtype.Text
 	LegalName          string
 	Entity             Entity
 	TaxID              pgtype.Text
 	Dba                string
 	Jurisdiction       string
-	AdminID            uuid.UUID
+	RegistrationNumber pgtype.Text
 	Owners             []byte
 	Address            []byte
 	Website            pgtype.Text
 	PhoneNumbers       []byte
 	EmailAddresses     []byte
-	Documents          []byte
 	CreatedAt          pgtype.Timestamp
 	UpdatedAt          pgtype.Timestamp
-	RegistrationNumber pgtype.Text
 }
 
 type Customers struct {
-	ID              uuid.UUID
+	ID              string
 	FirstName       string
 	LastName        string
 	MiddleName      pgtype.Text
-	OrgID           uuid.NullUUID
-	CreatorID       uuid.NullUUID
+	OtherNames      pgtype.Text
+	OrgID           pgtype.Text
+	CreatorID       pgtype.Text
 	Email           pgtype.Text
 	PhoneNumber     pgtype.Text
 	CityOfBirth     pgtype.Text
@@ -356,21 +354,50 @@ type Customers struct {
 }
 
 type Documents struct {
-	ID           uuid.UUID
-	CustomerID   uuid.NullUUID
-	BusinessID   uuid.NullUUID
+	ID           string
+	CustomerID   pgtype.Text
+	BusinessID   pgtype.Text
 	OriginalName pgtype.Text
 	Filename     pgtype.Text
 	Mimetype     pgtype.Text
 	CreatedAt    pgtype.Timestamp
 	Status       NullDocumentStatus
-	CreatorID    uuid.NullUUID
+	CreatorID    pgtype.Text
 	Metadata     []byte
 	UpdatedAt    pgtype.Timestamp
 }
 
+type GovIdentifications struct {
+	ID                 string
+	FirstName          pgtype.Text
+	LastName           pgtype.Text
+	MiddleName         pgtype.Text
+	OtherNames         pgtype.Text
+	Pin                string
+	CardNumber         pgtype.Text
+	IdentificationType IdentificationType
+	Occupation         pgtype.Text
+	IssuedCountry      pgtype.Text
+	IssuedDate         pgtype.Date
+	Nationality        pgtype.Text
+	PlaceOfBirth       pgtype.Text
+	PlaceOfIssue       pgtype.Text
+	DigitalAddress     pgtype.Text
+	MotherMaidenName   pgtype.Text
+	DateOfBirth        pgtype.Date
+	PhoneNumber1       pgtype.Text
+	PhoneNumber2       pgtype.Text
+	Address1           pgtype.Text
+	Address2           pgtype.Text
+	City               pgtype.Text
+	StateRegion        pgtype.Text
+	ZipCode            pgtype.Text
+	CreatedAt          pgtype.Timestamp
+	UpdatedAt          pgtype.Timestamp
+}
+
 type Identifications struct {
-	ID                 uuid.UUID
+	ID                 string
 	FirstName          pgtype.Text
 	LastName           pgtype.Text
 	MiddleName         pgtype.Text
@@ -392,16 +419,17 @@ type Identifications struct {
 }
 
 type Organizations struct {
-	ID        uuid.UUID
+	ID        string
 	Name      string
 	Status    NullStatus
+	CreatorID pgtype.Text
 	CreatedAt pgtype.Timestamp
 	UpdatedAt pgtype.Timestamp
 }
 
 type Otps struct {
-	ID          uuid.NullUUID
-	CustomerID  uuid.NullUUID
+	ID          string
+	CustomerID  pgtype.Text
 	HashedCode  pgtype.Text
 	Code        pgtype.Text
 	Channel     NullChannel
@@ -413,9 +441,9 @@ type Otps struct {
 }
 
 type StoredEvents struct {
-	ID               uuid.NullUUID
+	ID               string
 	Type             pgtype.Text
-	AggregateID      uuid.NullUUID
+	AggregateID      pgtype.Text
 	AggregateType    pgtype.Text
 	AggregateVersion pgtype.Int8
 	Data             []byte
@@ -425,14 +453,14 @@ type StoredEvents struct {
 }
 
 type Verifications struct {
-	ID               uuid.UUID
+	ID               string
 	VerificationType pgtype.Text
-	CustomerID       uuid.UUID
+	CustomerID       string
 	Customer         []byte
 	Business         []byte
 	BusinessID       pgtype.Text
 	OrgID            pgtype.Text
-	CreatorID        uuid.UUID
+	CreatorID        string
 	Outcome          NullOutcome
 	AmlInsight       []byte
 	PhoneInsight     []byte

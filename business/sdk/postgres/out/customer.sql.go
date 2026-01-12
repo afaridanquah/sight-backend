@@ -8,19 +8,18 @@ package db
 import (
 	"context"
 
-	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
 const CreateCustomer = `-- name: CreateCustomer :exec
     INSERT INTO customers(id, org_id, first_name, last_name, middle_name, date_of_birth, birth_country, city_of_birth, email, phone_number, creator_id, identifications, addresses, created_at, updated_at)
     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)
-    RETURNING id, first_name, last_name, middle_name, org_id, creator_id, email, phone_number, city_of_birth, birth_country, date_of_birth, identifications, addresses, created_at, updated_at, deleted_at
+    RETURNING id, first_name, last_name, middle_name, other_names, org_id, creator_id, email, phone_number, city_of_birth, birth_country, date_of_birth, identifications, addresses, created_at, updated_at, deleted_at
 `
 
 type CreateCustomerParams struct {
-	ID              uuid.UUID
-	OrgID           uuid.NullUUID
+	ID              string
+	OrgID           pgtype.Text
 	FirstName       string
 	LastName        string
 	MiddleName      pgtype.Text
@@ -29,7 +28,7 @@ type CreateCustomerParams struct {
 	CityOfBirth     pgtype.Text
 	Email           pgtype.Text
 	PhoneNumber     pgtype.Text
-	CreatorID       uuid.NullUUID
+	CreatorID       pgtype.Text
 	Identifications []byte
 	Addresses       []byte
 	CreatedAt       pgtype.Timestamp
@@ -58,14 +57,14 @@ func (q *Queries) CreateCustomer(ctx context.Context, arg CreateCustomerParams) 
 }
 
 const QueryCustomerByAndOrgID = `-- name: QueryCustomerByAndOrgID :one
-    SELECT id, first_name, last_name, middle_name, org_id, creator_id, email, phone_number, city_of_birth, birth_country, date_of_birth, identifications, addresses, created_at, updated_at, deleted_at FROM customers
+    SELECT id, first_name, last_name, middle_name, other_names, org_id, creator_id, email, phone_number, city_of_birth, birth_country, date_of_birth, identifications, addresses, created_at, updated_at, deleted_at FROM customers
     WHERE customers.id = $1
     AND customers.org_id = $2
 `
 
 type QueryCustomerByAndOrgIDParams struct {
-	ID    uuid.UUID
-	OrgID uuid.NullUUID
+	ID    string
+	OrgID pgtype.Text
 }
 
 func (q *Queries) QueryCustomerByAndOrgID(ctx context.Context, arg QueryCustomerByAndOrgIDParams) (Customers, error) {
@@ -76,6 +75,7 @@ func (q *Queries) QueryCustomerByAndOrgID(ctx context.Context, arg QueryCustomer
 		&i.FirstName,
 		&i.LastName,
 		&i.MiddleName,
+		&i.OtherNames,
 		&i.OrgID,
 		&i.CreatorID,
 		&i.Email,
@@ -93,11 +93,11 @@ func (q *Queries) QueryCustomerByAndOrgID(ctx context.Context, arg QueryCustomer
 }
 
 const QueryCustomerByID = `-- name: QueryCustomerByID :one
-    SELECT id, first_name, last_name, middle_name, org_id, creator_id, email, phone_number, city_of_birth, birth_country, date_of_birth, identifications, addresses, created_at, updated_at, deleted_at FROM customers
+    SELECT id, first_name, last_name, middle_name, other_names, org_id, creator_id, email, phone_number, city_of_birth, birth_country, date_of_birth, identifications, addresses, created_at, updated_at, deleted_at FROM customers
     WHERE customers.id = $1
 `
 
-func (q *Queries) QueryCustomerByID(ctx context.Context, id uuid.UUID) (Customers, error) {
+func (q *Queries) QueryCustomerByID(ctx context.Context, id string) (Customers, error) {
 	row := q.db.QueryRow(ctx, QueryCustomerByID, id)
 	var i Customers
 	err := row.Scan(
@@ -105,6 +105,7 @@ func (q *Queries) QueryCustomerByID(ctx context.Context, id uuid.UUID) (Customer
 		&i.FirstName,
 		&i.LastName,
 		&i.MiddleName,
+		&i.OtherNames,
 		&i.OrgID,
 		&i.CreatorID,
 		&i.Email,
@@ -119,6 +120,51 @@ func (q *Queries) QueryCustomerByID(ctx context.Context, id uuid.UUID) (Customer
 		&i.DeletedAt,
 	)
 	return i, err
+}
+
+const QueryCustomersByOrgID = `-- name: QueryCustomersByOrgID :many
+SELECT id, first_name, last_name, middle_name, other_names, org_id, creator_id, email, phone_number, city_of_birth, birth_country, date_of_birth, identifications, addresses, created_at, updated_at, deleted_at
+FROM customers
+WHERE org_id = $1
+ORDER BY id
+`
+
+func (q *Queries) QueryCustomersByOrgID(ctx context.Context, orgID pgtype.Text) ([]Customers, error) {
+	rows, err := q.db.Query(ctx, QueryCustomersByOrgID, orgID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []Customers{}
+	for rows.Next() {
+		var i Customers
+		if err := rows.Scan(
+			&i.ID,
+			&i.FirstName,
+			&i.LastName,
+			&i.MiddleName,
+			&i.OtherNames,
+			&i.OrgID,
+			&i.CreatorID,
+			&i.Email,
+			&i.PhoneNumber,
+			&i.CityOfBirth,
+			&i.BirthCountry,
+			&i.DateOfBirth,
+			&i.Identifications,
+			&i.Addresses,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+			&i.DeletedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
 }
 
 const UpdateCustomer = `-- name: UpdateCustomer :exec
@@ -136,7 +182,7 @@ const UpdateCustomer = `-- name: UpdateCustomer :exec
 `
 
 type UpdateCustomerParams struct {
-	ID           uuid.UUID
+	ID           string
 	FirstName    string
 	LastName     string
 	MiddleName   pgtype.Text

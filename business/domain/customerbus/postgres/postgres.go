@@ -9,7 +9,6 @@ import (
 	db "bitbucket.org/msafaridanquah/sight-backend/business/sdk/postgres/out"
 	"bitbucket.org/msafaridanquah/sight-backend/foundation/otel"
 	"bitbucket.org/msafaridanquah/sight-backend/foundation/vaulti"
-	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/jackc/pgx/v5/pgxpool"
 	semconv "go.opentelemetry.io/otel/semconv/v1.26.0"
@@ -37,7 +36,7 @@ func (r *Repository) Add(ctx context.Context, bus customerbus.Customer) error {
 	dob, _ := time.Parse(time.DateOnly, bus.DateOfBirth.String())
 
 	createParams := db.CreateCustomerParams{
-		ID:        bus.ID,
+		ID:        bus.ID.String(),
 		FirstName: bus.Person.FirstName,
 		LastName:  bus.Person.LastName,
 		MiddleName: pgtype.Text{
@@ -56,13 +55,13 @@ func (r *Repository) Add(ctx context.Context, bus customerbus.Customer) error {
 			String: bus.BirthCountry.Alpha2(),
 			Valid:  true,
 		},
-		OrgID: uuid.NullUUID{
-			UUID:  bus.OrgID,
-			Valid: true,
+		OrgID: pgtype.Text{
+			String: bus.OrgID,
+			Valid:  true,
 		},
-		CreatorID: uuid.NullUUID{
-			UUID:  bus.UserID,
-			Valid: true,
+		CreatorID: pgtype.Text{
+			String: bus.UserID,
+			Valid:  true,
 		},
 		CreatedAt: pgtype.Timestamp{
 			Time:  bus.CreatedAt,
@@ -73,11 +72,13 @@ func (r *Repository) Add(ctx context.Context, bus customerbus.Customer) error {
 			Valid: true,
 		},
 	}
-	identificationsJson, err := toDBIdentifications(bus.Identifications, r.vaulti)
-	if err != nil {
-		return err
+	if len(bus.Identifications) > 0 {
+		identificationsJSON, err := toDBIdentifications(bus.Identifications, r.vaulti)
+		if err != nil {
+			return err
+		}
+		createParams.Identifications = identificationsJSON
 	}
-	createParams.Identifications = identificationsJson
 
 	if bus.PhoneNumber != (valueobject.Phone{}) {
 		createParams.PhoneNumber = pgtype.Text{
@@ -100,7 +101,7 @@ func (r *Repository) Update(ctx context.Context, bus customerbus.Customer) error
 	dob, _ := time.Parse(time.DateOnly, bus.DateOfBirth.String())
 
 	if err := r.queries.UpdateCustomer(ctx, db.UpdateCustomerParams{
-		ID:       bus.ID,
+		ID:       bus.ID.String(),
 		LastName: bus.Person.LastName,
 		MiddleName: pgtype.Text{
 			String: bus.Person.MiddleName,
@@ -130,16 +131,16 @@ func (r *Repository) Update(ctx context.Context, bus customerbus.Customer) error
 	return nil
 }
 
-func (r *Repository) QueryByIDAndOrgID(ctx context.Context, id uuid.UUID, orgID uuid.UUID) (customerbus.Customer, error) {
+func (r *Repository) QueryByIDAndOrgID(ctx context.Context, id valueobject.ID, orgID valueobject.ID) (customerbus.Customer, error) {
 	ctx, span := otel.AddSpan(ctx, "business.customerbus.postgres.querybycustomerandbusinessid")
 	span.SetAttributes(semconv.DBSystemPostgreSQL)
 	defer span.End()
 
 	resp, err := r.queries.QueryCustomerByAndOrgID(ctx, db.QueryCustomerByAndOrgIDParams{
-		ID: id,
-		OrgID: uuid.NullUUID{
-			UUID:  orgID,
-			Valid: true,
+		ID: id.String(),
+		OrgID: pgtype.Text{
+			String: orgID.String(),
+			Valid:  true,
 		},
 	})
 
@@ -153,4 +154,31 @@ func (r *Repository) QueryByIDAndOrgID(ctx context.Context, id uuid.UUID, orgID 
 	}
 
 	return customer, nil
+}
+
+func (r *Repository) QueryByOrgID(ctx context.Context, orgID valueobject.ID) ([]customerbus.Customer, error) {
+	ctx, span := otel.AddSpan(ctx, "business.customerbus.postgres.querybyorgid")
+	span.SetAttributes(semconv.DBSystemPostgreSQL)
+	defer span.End()
+
+	res, err := r.queries.QueryCustomersByOrgID(ctx, pgtype.Text{
+		String: orgID.String(),
+		Valid:  true,
+	})
+
+	if err != nil {
+		return []customerbus.Customer{}, err
+	}
+	customers := make([]customerbus.Customer, len(res))
+
+	if len(res) > 0 {
+		for k, v := range res {
+			bus, err := toBusCustomer(v, r.vaulti)
+			if err != nil {
+				return []customerbus.Customer{}, err
+			}
+			customers[k] = bus
+		}
+	}
+	return customers, nil
 }

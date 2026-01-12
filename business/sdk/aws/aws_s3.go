@@ -14,9 +14,8 @@ import (
 )
 
 const (
-	AWS_S3_REGION = "us-east-2"  // Region
-	AWS_S3_BUCKET = "sight.disk" // Bucket
-
+	awsRegion = "us-east-2"  // Region
+	awsBucket = "sight.disk" // Bucket
 )
 
 type Config struct {
@@ -39,12 +38,12 @@ func NewS3(conf Config) (*AWSS3, error) {
 	}
 
 	key := get("AWS_ACCESS_KEY_ID")
-	secret := get("AWS_SECRET_ACCESS_KEY")
+	secret := get("AWS_ACCESS_SECRET")
 
 	creds := credentials.NewStaticCredentialsProvider(key, secret, "")
 
 	ctx := context.TODO()
-	cfg, err := config.LoadDefaultConfig(ctx, config.WithCredentialsProvider(creds), config.WithRegion(AWS_S3_REGION))
+	cfg, err := config.LoadDefaultConfig(ctx, config.WithCredentialsProvider(creds), config.WithRegion(awsRegion))
 	if err != nil {
 		return &AWSS3{}, err
 	}
@@ -59,7 +58,7 @@ func NewS3(conf Config) (*AWSS3, error) {
 func (s3 *AWSS3) Upload(file []byte, filename string) error {
 	uploader := manager.NewUploader(s3.Client)
 	_, err := uploader.Upload(context.TODO(), &awss3.PutObjectInput{
-		Bucket: aws.String(AWS_S3_BUCKET),
+		Bucket: aws.String(awsBucket),
 		Key:    aws.String(filename),
 		Body:   bytes.NewReader(file),
 	})

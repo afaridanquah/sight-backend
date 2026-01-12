@@ -1,3 +1,3 @@
 -- name: InsertOrg :exec
-INSERT INTO organizations (id,name,status)
-VALUES ($1,$2,$3);
+INSERT INTO organizations (id,name,status,created_at,updated_at)
+VALUES (@id,@name,@status,@created_at,@updated_at);

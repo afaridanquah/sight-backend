@@ -24,3 +24,10 @@
         updated_at = $9,
         date_of_birth = $10
     WHERE id = $1;
+
+
+-- name: QueryCustomersByOrgID :many
+SELECT *
+FROM customers
+WHERE org_id = @org_id
+ORDER BY id;

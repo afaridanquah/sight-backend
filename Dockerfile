@@ -1,8 +1,8 @@
 FROM golang:1.22.4-bookworm AS builder
 
 ENV CGO_ENABLED=0 \
-  GOOS=linux \
-  GOARCH=amd64 
+    GOOS=linux \
+    GOARCH=amd64
 
 WORKDIR /build/
 

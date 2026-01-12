@@ -8,7 +8,6 @@ package db
 import (
 	"context"
 
-	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
@@ -19,8 +18,8 @@ WHERE id = $1
 `
 
 type GetOTPRow struct {
-	ID          uuid.NullUUID
-	CustomerID  uuid.NullUUID
+	ID          string
+	CustomerID  pgtype.Text
 	Destination string
 	Channel     NullChannel
 	Code        pgtype.Text
@@ -30,7 +29,7 @@ type GetOTPRow struct {
 	UpdatedAt   pgtype.Timestamp
 }
 
-func (q *Queries) GetOTP(ctx context.Context, id uuid.NullUUID) (GetOTPRow, error) {
+func (q *Queries) GetOTP(ctx context.Context, id string) (GetOTPRow, error) {
 	row := q.db.QueryRow(ctx, GetOTP, id)
 	var i GetOTPRow
 	err := row.Scan(
@@ -55,13 +54,13 @@ AND hashed_code = $2
 `
 
 type GetOTPByCustomerIDAndCodeParams struct {
-	CustomerID uuid.NullUUID
+	CustomerID pgtype.Text
 	HashedCode pgtype.Text
 }
 
 type GetOTPByCustomerIDAndCodeRow struct {
-	ID         uuid.NullUUID
-	CustomerID uuid.NullUUID
+	ID         string
+	CustomerID pgtype.Text
 	HashedCode pgtype.Text
 	Code       pgtype.Text
 	VerifiedAt pgtype.Timestamp
@@ -92,8 +91,8 @@ VALUES($1, $2, $3, $4, $5, $6, $7)
 `
 
 type InsertOTPParams struct {
-	ID          uuid.NullUUID
-	CustomerID  uuid.NullUUID
+	ID          string
+	CustomerID  pgtype.Text
 	HashedCode  pgtype.Text
 	Code        pgtype.Text
 	ExpiresAt   pgtype.Timestamp

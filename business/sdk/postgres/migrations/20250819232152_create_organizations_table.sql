@@ -6,6 +6,7 @@ CREATE TABLE organizations (
     id CHAR(31) PRIMARY KEY,
     name VARCHAR(255) NOT NULL,
     status status,
+    creator_id CHAR(31),
     created_at TIMESTAMP NOT NULL DEFAULT NOW(),
     updated_at TIMESTAMP NOT NULL DEFAULT NOW()
 );

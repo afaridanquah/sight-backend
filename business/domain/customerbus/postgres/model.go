@@ -65,15 +65,13 @@ func toBusCustomer(resp db.Customers, vaulti *vaulti.Vaulty) (customerbus.Custom
 		return customerbus.Customer{}, err
 	}
 
-	var identifications []Identification
-	if err := json.Unmarshal(resp.Identifications, &identifications); err != nil {
-		return customerbus.Customer{}, err
-	}
-
-	busidentifications := make([]valueobject.Identification, len(identifications))
+	identifications := make([]Identification, len(resp.Identifications))
+	busidentifications := make([]valueobject.Identification, len(resp.Identifications))
 
 	if len(resp.Identifications) > 0 {
-
+		if err := json.Unmarshal(resp.Identifications, &identifications); err != nil {
+			return customerbus.Customer{}, err
+		}
 		for i, v := range identifications {
 			decrypted, err := vaulti.TransitDecrypt(v.Pin, vaultKey)
 			if err != nil {
@@ -98,11 +96,16 @@ func toBusCustomer(resp db.Customers, vaulti *vaulti.Vaulty) (customerbus.Custom
 		return customerbus.Customer{}, err
 	}
 
+	id, err := valueobject.ParseCustomerID(resp.ID)
+	if err != nil {
+		return customerbus.Customer{}, err
+	}
+
 	customer := customerbus.Customer{
-		ID:              resp.ID,
+		ID:              id,
 		Person:          person,
-		UserID:          resp.CreatorID.UUID,
-		OrgID:           resp.OrgID.UUID,
+		UserID:          resp.CreatorID.String,
+		OrgID:           resp.OrgID.String,
 		Email:           email,
 		BirthCountry:    birthCountry,
 		DateOfBirth:     dob,

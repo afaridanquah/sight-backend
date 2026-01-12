@@ -2,7 +2,6 @@ package web
 
 import (
 	"context"
-	"errors"
 	"net/http"
 
 	"bitbucket.org/msafaridanquah/sight-backend/foundation/ierr"
@@ -29,26 +28,26 @@ func RenderErrorResponse(ctx context.Context, w http.ResponseWriter, r *http.Req
 	// 	}
 	// }
 
-	var aerr *ierr.Error
+	// var aerr *ierr.Error
 
-	if !errors.As(err, &aerr) {
-		resp.Error = "internal error"
-	} else {
-		switch aerr.Code() {
-		case ierr.InvalidArgument:
-			status = http.StatusBadRequest
+	// if !errors.As(err, &aerr) {
+	// 	resp.Error = "internal error"
+	// } else {
+	// 	switch aerr.Code() {
+	// 	case ierr.InvalidArgument:
+	// 		status = http.StatusBadRequest
 
-			var verrors ierr.FieldErrors
+	// 		var verrors ierr.FieldErrors
 
-			if errors.As(aerr, &verrors) {
-				resp.Validations = verrors
-			}
-		case ierr.Unknown:
-			fallthrough
-		default:
-			status = aerr.HTTPStatus()
-		}
-	}
+	// 		if errors.As(aerr, &verrors) {
+	// 			resp.Validations = verrors
+	// 		}
+	// 	case ierr.Unknown:
+	// 		fallthrough
+	// 	default:
+	// 		status = aerr.HTTPStatus()
+	// 	}
+	// }
 
 	if err != nil {
 		_, span := addSpan(ctx, "rendererrorresponse")

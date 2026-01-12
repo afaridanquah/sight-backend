@@ -8,21 +8,29 @@ package db
 import (
 	"context"
 
-	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5/pgtype"
 )
 
 const InsertOrg = `-- name: InsertOrg :exec
-INSERT INTO organizations (id,name,status)
-VALUES ($1,$2,$3)
+INSERT INTO organizations (id,name,status,created_at,updated_at)
+VALUES ($1,$2,$3,$4,$5)
 `
 
 type InsertOrgParams struct {
-	ID     uuid.UUID
-	Name   string
-	Status NullStatus
+	ID        string
+	Name      string
+	Status    NullStatus
+	CreatedAt pgtype.Timestamp
+	UpdatedAt pgtype.Timestamp
 }
 
 func (q *Queries) InsertOrg(ctx context.Context, arg InsertOrgParams) error {
-	_, err := q.db.Exec(ctx, InsertOrg, arg.ID, arg.Name, arg.Status)
+	_, err := q.db.Exec(ctx, InsertOrg,
+		arg.ID,
+		arg.Name,
+		arg.Status,
+		arg.CreatedAt,
+		arg.UpdatedAt,
+	)
 	return err
 }

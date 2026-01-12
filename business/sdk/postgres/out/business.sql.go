@@ -8,7 +8,6 @@ package db
 import (
 	"context"
 
-	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
@@ -17,8 +16,8 @@ DELETE FROM businesses WHERE businesses.id = $1 AND businesses.org_id = $2
 `
 
 type DeleteByIDParams struct {
-	ID    uuid.UUID
-	OrgID uuid.NullUUID
+	ID    string
+	OrgID pgtype.Text
 }
 
 func (q *Queries) DeleteByID(ctx context.Context, arg DeleteByIDParams) error {
@@ -27,12 +26,12 @@ func (q *Queries) DeleteByID(ctx context.Context, arg DeleteByIDParams) error {
 }
 
 const GetBusinessByID = `-- name: GetBusinessByID :one
-SELECT id, org_id, legal_name, entity, tax_id, dba, jurisdiction, admin_id, owners, address, website, phone_numbers, email_addresses, documents, created_at, updated_at, registration_number FROM businesses WHERE businesses.id = $1 AND businesses.org_id = $2
+SELECT id, org_id, legal_name, entity, tax_id, dba, jurisdiction, registration_number, owners, address, website, phone_numbers, email_addresses, created_at, updated_at FROM businesses WHERE businesses.id = $1 AND businesses.org_id = $2
 `
 
 type GetBusinessByIDParams struct {
-	ID    uuid.UUID
-	OrgID uuid.NullUUID
+	ID    string
+	OrgID pgtype.Text
 }
 
 func (q *Queries) GetBusinessByID(ctx context.Context, arg GetBusinessByIDParams) (Businesses, error) {
@@ -46,16 +45,14 @@ func (q *Queries) GetBusinessByID(ctx context.Context, arg GetBusinessByIDParams
 		&i.TaxID,
 		&i.Dba,
 		&i.Jurisdiction,
-		&i.AdminID,
+		&i.RegistrationNumber,
 		&i.Owners,
 		&i.Address,
 		&i.Website,
 		&i.PhoneNumbers,
 		&i.EmailAddresses,
-		&i.Documents,
 		&i.CreatedAt,
 		&i.UpdatedAt,
-		&i.RegistrationNumber,
 	)
 	return i, err
 }
@@ -70,7 +67,6 @@ INSERT INTO businesses (
     entity,
     jurisdiction,
     dba,
-    admin_id,
     owners,
     address,
     website,
@@ -78,19 +74,32 @@ INSERT INTO businesses (
     email_addresses,
     created_at,
     updated_at
-) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16)
+) VALUES ($1,
+$2,
+$3,
+$4,
+$5,
+$6,
+$7,
+$8,
+$9,
+$10,
+$11,
+$12,
+$13,
+$14,
+$15)
 `
 
 type InsertBusinessParams struct {
-	ID                 uuid.UUID
+	ID                 string
 	LegalName          string
 	RegistrationNumber pgtype.Text
-	OrgID              uuid.NullUUID
+	OrgID              pgtype.Text
 	TaxID              pgtype.Text
 	Entity             Entity
 	Jurisdiction       string
 	Dba                string
-	AdminID            uuid.UUID
 	Owners             []byte
 	Address            []byte
 	Website            pgtype.Text
@@ -110,7 +119,6 @@ func (q *Queries) InsertBusiness(ctx context.Context, arg InsertBusinessParams) 
 		arg.Entity,
 		arg.Jurisdiction,
 		arg.Dba,
-		arg.AdminID,
 		arg.Owners,
 		arg.Address,
 		arg.Website,
@@ -125,53 +133,50 @@ func (q *Queries) InsertBusiness(ctx context.Context, arg InsertBusinessParams) 
 const UpdateBusinessByID = `-- name: UpdateBusinessByID :exec
 UPDATE businesses
 SET
-    legal_name      = $2,
-    tax_id          = $3,
-    entity          = $4,
-    jurisdiction    = $5,
-    dba             = $6,
-    admin_id        = $7,
-    address         = $8,   -- JSONB
-    website         = $9,
-    phone_numbers   = $10,  -- ARRAY or JSONB
-    email_addresses = $11,  -- ARRAY or JSONB
-    updated_at = $12,
-    registration_number = $13
-WHERE id = $1 AND org_id = $14
+    legal_name      = $1,
+    tax_id          = $2,
+    entity          = $3,
+    jurisdiction    = $4,
+    dba             = $5,
+    address         = $6,   -- JSONB
+    website         = $7,
+    phone_numbers   = $8,  -- ARRAY or JSONB
+    email_addresses = $9,  -- ARRAY or JSONB
+    updated_at = $10,
+    registration_number = $11
+WHERE id = $12 AND org_id = $13
 `
 
 type UpdateBusinessByIDParams struct {
-	ID                 uuid.UUID
 	LegalName          string
 	TaxID              pgtype.Text
 	Entity             Entity
 	Jurisdiction       string
 	Dba                string
-	AdminID            uuid.UUID
 	Address            []byte
 	Website            pgtype.Text
 	PhoneNumbers       []byte
 	EmailAddresses     []byte
 	UpdatedAt          pgtype.Timestamp
 	RegistrationNumber pgtype.Text
-	OrgID              uuid.NullUUID
+	ID                 string
+	OrgID              pgtype.Text
 }
 
 func (q *Queries) UpdateBusinessByID(ctx context.Context, arg UpdateBusinessByIDParams) error {
 	_, err := q.db.Exec(ctx, UpdateBusinessByID,
-		arg.ID,
 		arg.LegalName,
 		arg.TaxID,
 		arg.Entity,
 		arg.Jurisdiction,
 		arg.Dba,
-		arg.AdminID,
 		arg.Address,
 		arg.Website,
 		arg.PhoneNumbers,
 		arg.EmailAddresses,
 		arg.UpdatedAt,
 		arg.RegistrationNumber,
+		arg.ID,
 		arg.OrgID,
 	)
 	return err
