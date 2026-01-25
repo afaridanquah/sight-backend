@@ -12,14 +12,14 @@ import (
 )
 
 const GetOTP = `-- name: GetOTP :one
-SELECT id, customer_id, destination, channel, code, verified_at, expires_at, created_at, updated_at
+SELECT id, entity_id, destination, channel, code, verified_at, expires_at, created_at, updated_at
 FROM otps
 WHERE id = $1
 `
 
 type GetOTPRow struct {
 	ID          string
-	CustomerID  pgtype.Text
+	EntityID    pgtype.Text
 	Destination string
 	Channel     NullChannel
 	Code        pgtype.Text
@@ -34,7 +34,7 @@ func (q *Queries) GetOTP(ctx context.Context, id string) (GetOTPRow, error) {
 	var i GetOTPRow
 	err := row.Scan(
 		&i.ID,
-		&i.CustomerID,
+		&i.EntityID,
 		&i.Destination,
 		&i.Channel,
 		&i.Code,
@@ -47,20 +47,20 @@ func (q *Queries) GetOTP(ctx context.Context, id string) (GetOTPRow, error) {
 }
 
 const GetOTPByCustomerIDAndCode = `-- name: GetOTPByCustomerIDAndCode :one
-SELECT id, customer_id, hashed_code, code, verified_at, expires_at, created_at, updated_at
+SELECT id, entity_id, hashed_code, code, verified_at, expires_at, created_at, updated_at
 FROM otps
-WHERE customer_id = $1
+WHERE entity_id = $1
 AND hashed_code = $2
 `
 
 type GetOTPByCustomerIDAndCodeParams struct {
-	CustomerID pgtype.Text
+	EntityID   pgtype.Text
 	HashedCode pgtype.Text
 }
 
 type GetOTPByCustomerIDAndCodeRow struct {
 	ID         string
-	CustomerID pgtype.Text
+	EntityID   pgtype.Text
 	HashedCode pgtype.Text
 	Code       pgtype.Text
 	VerifiedAt pgtype.Timestamp
@@ -70,11 +70,11 @@ type GetOTPByCustomerIDAndCodeRow struct {
 }
 
 func (q *Queries) GetOTPByCustomerIDAndCode(ctx context.Context, arg GetOTPByCustomerIDAndCodeParams) (GetOTPByCustomerIDAndCodeRow, error) {
-	row := q.db.QueryRow(ctx, GetOTPByCustomerIDAndCode, arg.CustomerID, arg.HashedCode)
+	row := q.db.QueryRow(ctx, GetOTPByCustomerIDAndCode, arg.EntityID, arg.HashedCode)
 	var i GetOTPByCustomerIDAndCodeRow
 	err := row.Scan(
 		&i.ID,
-		&i.CustomerID,
+		&i.EntityID,
 		&i.HashedCode,
 		&i.Code,
 		&i.VerifiedAt,
@@ -86,13 +86,13 @@ func (q *Queries) GetOTPByCustomerIDAndCode(ctx context.Context, arg GetOTPByCus
 }
 
 const InsertOTP = `-- name: InsertOTP :exec
-INSERT INTO otps(id, customer_id, hashed_code, code, expires_at, channel, destination)
+INSERT INTO otps(id, entity_id, hashed_code, code, expires_at, channel, destination)
 VALUES($1, $2, $3, $4, $5, $6, $7)
 `
 
 type InsertOTPParams struct {
 	ID          string
-	CustomerID  pgtype.Text
+	EntityID    pgtype.Text
 	HashedCode  pgtype.Text
 	Code        pgtype.Text
 	ExpiresAt   pgtype.Timestamp
@@ -103,7 +103,7 @@ type InsertOTPParams struct {
 func (q *Queries) InsertOTP(ctx context.Context, arg InsertOTPParams) error {
 	_, err := q.db.Exec(ctx, InsertOTP,
 		arg.ID,
-		arg.CustomerID,
+		arg.EntityID,
 		arg.HashedCode,
 		arg.Code,
 		arg.ExpiresAt,

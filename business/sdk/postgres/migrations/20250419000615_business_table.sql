@@ -26,8 +26,7 @@ CREATE TABLE businesses (
 -- +goose StatementEnd
 -- +goose Down
 -- +goose StatementBegin
-DROP TABLE businesses;
-DROP TYPE status;
-DROP TYPE entity;
-
+DROP TABLE IF EXISTS businesses;
+DROP TYPE IF EXISTS status;
+DROP TYPE IF EXISTS entity;
 -- +goose StatementEnd

@@ -13,9 +13,10 @@ func NewVaultProvider() (*vault.Provider, error) {
 	vaultPath := os.Getenv("VAULT_PATH")
 	vaultToken := os.Getenv("VAULT_TOKEN")
 	vaultAddress := os.Getenv("VAULT_ADDRESS")
+	vaultPort := os.Getenv("VAULT_PORT")
 	// XXX: -
 
-	provider, err := vault.New(vaultToken, vaultAddress, vaultPath)
+	provider, err := vault.New(vaultToken, vaultAddress, vaultPort, vaultPath)
 	if err != nil {
 		return nil, ierr.WrapErrorf(err, ierr.InvalidArgument, "vault.New")
 	}

@@ -89,8 +89,9 @@ func (a *App) create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	appCustomer := toAppCustomer(bcus)
-	web.RenderResponse(http.StatusCreated, w, r, appCustomer)
+	cus := toAppCustomer(bcus)
+
+	web.RenderResponse(http.StatusCreated, w, r, cus)
 }
 
 func (a *App) update(w http.ResponseWriter, r *http.Request) {
@@ -142,6 +143,7 @@ func (a *App) update(w http.ResponseWriter, r *http.Request) {
 	}
 
 	appCustomer := toAppCustomer(bus)
+
 	web.RenderResponse(http.StatusOK, w, r, appCustomer)
 }
 
@@ -161,7 +163,15 @@ func (a *App) findByID(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	busids, err := a.identificationService.GetByCustomerID(ctx, bcus.ID.String())
+	a.log.Info(ctx, "results from ids repo %v", busids)
+	if err != nil {
+		web.RenderErrorResponse(ctx, w, r, err.Error(), errs.New(errs.NotFound, err))
+		return
+	}
+
 	appCustomer := toAppCustomer(bcus)
+	appCustomer.WithIdentifications(&busids)
 	web.RenderResponse(http.StatusOK, w, r, appCustomer)
 }
 

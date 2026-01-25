@@ -55,28 +55,17 @@ func (o NewCustomer) Validate() error {
 	return nil
 }
 
-func toAppCustomer(cus customerbus.Customer) Customer {
-	identifications := make([]Identification, len(cus.Identifications))
-	if len(cus.Identifications) > 0 {
-		for i, idx := range cus.Identifications {
-			expDate := idx.ExpDate.Format(time.DateOnly)
-			identifications[i] = Identification{
-				Pin: idx.Pin,
-				IssuedCountry: Country{
-					AlphaCode2: idx.IssedCountry.Alpha2(),
-					Name:       idx.IssedCountry.Name(),
-				},
-				IdentificationType: idx.IdentificationType.String(),
-				Nationality: Country{
-					AlphaCode2: idx.Nationality.Alpha2(),
-					Name:       idx.Nationality.Name(),
-				},
-				ExpDate:    expDate,
-				IssuedDate: idx.IssuedDate.Format(time.DateOnly),
-			}
+func (c *Customer) WithIdentifications(ids *[]identificationbus.Identification) {
+	identifications := make([]Identification, len(*ids))
+	if len(*ids) > 0 {
+		for k, v := range *ids {
+			identifications[k] = toAppIdentification(v)
 		}
 	}
+	c.Identifications = identifications
+}
 
+func toAppCustomer(cus customerbus.Customer) Customer {
 	return Customer{
 		ID:              cus.ID.String(),
 		FirstName:       cus.Person.FirstName,
@@ -84,23 +73,14 @@ func toAppCustomer(cus customerbus.Customer) Customer {
 		LastName:        cus.Person.LastName,
 		DateOfBirth:     cus.DateOfBirth.String(),
 		Email:           cus.Email.String(),
-		Identifications: identifications,
 		PhoneNumber:     cus.PhoneNumber.E164Format,
+		Identifications: []Identification{},
 		BirthCountry: Country{
 			AlphaCode2: cus.BirthCountry.Alpha2(),
 			Name:       cus.BirthCountry.Name(),
 		},
 	}
 }
-
-// func toAppCustomers(cuss []customerbus.Customer) []Customer {
-// 	app := make([]Customer, len(cuss))
-// 	for i, cus := range cuss {
-// 		app[i] = toAppCustomer(cus)
-// 	}
-
-// 	return app
-// }
 
 func toBusNewCustomer(c NewCustomer) (customerbus.NewCustomer, error) {
 	country, err := valueobject.NewCountry(c.BirthCountry)
@@ -166,6 +146,8 @@ type Identification struct {
 	Nationality        Country `json:"nationality"`
 	IssuedDate         string  `json:"issued_date"`
 	ExpDate            string  `json:"exp_date"`
+	CreatedAt          string  `json:"created_at"`
+	UpdatedAt          string  `json:"updated_at"`
 }
 
 func toAppIdentification(bus identificationbus.Identification) Identification {
@@ -183,6 +165,8 @@ func toAppIdentification(bus identificationbus.Identification) Identification {
 		},
 		IssuedDate: bus.IssuedDate.Format(time.RFC3339),
 		ExpDate:    bus.ExpDate.Format(time.RFC3339),
+		CreatedAt:  bus.CreatedAt.Format(time.RFC3339),
+		UpdatedAt:  bus.UpdatedAt.Format(time.RFC3339),
 	}
 }
 
@@ -240,48 +224,12 @@ func toBusNewIdentifications(idx NewIdentifications, bcus customerbus.Customer) 
 	return identifications, nil
 }
 
-// func toBusNewIdentifications(c NewCustomer, bcus customerbus.Customer) ([]identificationbus.NewIdentification, error) {
-// 	identifications := make([]identificationbus.NewIdentification, len(c.Identifications))
-// 	if c.Identifications != nil {
-// 		if len(c.Identifications) > 0 {
-// 			for k, v := range c.Identifications {
-// 				idt, err := ivo.ParseIdentificationType(v.IdentificationType)
-// 				if err != nil {
-// 					return []identificationbus.NewIdentification{}, err
-// 				}
-
-// 				issued, err := time.Parse(time.DateOnly, *v.IssuedDate)
-// 				if err != nil {
-// 					return []identificationbus.NewIdentification{}, err
-// 				}
-
-// 				exp, err := time.Parse(time.DateOnly, *v.ExpDate)
-// 				if err != nil {
-// 					return []identificationbus.NewIdentification{}, err
-// 				}
-
-// 				issc, err := ivo.NewCountry(v.IssuedCountry)
-// 				if err != nil {
-// 					return []identificationbus.NewIdentification{}, err
-// 				}
-
-// 				identifications[k] = identificationbus.NewIdentification{
-// 					CustomerID:         bcus.ID.String(),
-// 					Pin:                v.Pin,
-// 					IdentificationType: idt,
-// 					IssuedDate:         issued,
-// 					ExpDate:            exp,
-// 					Country:            issc,
-// 				}
-// 			}
-// 		}
-// 	}
-// 	return identifications, nil
-// }
-
-// =======================================================================================
+//
+// ======================================================================================
+// Customer Address
 
 type Address struct {
+	ID       string `json:"id"`
 	Address1 string `json:"line_1"`
 	Address2 string `json:"line_2"`
 	City     string `json:"city"`
@@ -289,6 +237,17 @@ type Address struct {
 	Zip      string `json:"zip"`
 	Country  string `json:"country"`
 }
+
+type NewAddress struct {
+	Address1 string `json:"line_1"`
+	Address2 string `json:"line_2"`
+	City     string `json:"city"`
+	State    string `json:"state"`
+	Zip      string `json:"zip"`
+	Country  string `json:"country"`
+}
+
+// =======================================================================================
 
 type UpdateCustomer struct {
 	FirstName   *string  `json:"first_name"`

@@ -9,13 +9,13 @@ import (
 	"context"
 )
 
-// iteratorForBulkInsertIdentifications implements pgx.CopyFromSource.
-type iteratorForBulkInsertIdentifications struct {
-	rows                 []BulkInsertIdentificationsParams
+// iteratorForBulkInsertCustomerIdentifications implements pgx.CopyFromSource.
+type iteratorForBulkInsertCustomerIdentifications struct {
+	rows                 []BulkInsertCustomerIdentificationsParams
 	skippedFirstNextCall bool
 }
 
-func (r *iteratorForBulkInsertIdentifications) Next() bool {
+func (r *iteratorForBulkInsertCustomerIdentifications) Next() bool {
 	if len(r.rows) == 0 {
 		return false
 	}
@@ -27,16 +27,18 @@ func (r *iteratorForBulkInsertIdentifications) Next() bool {
 	return len(r.rows) > 0
 }
 
-func (r iteratorForBulkInsertIdentifications) Values() ([]interface{}, error) {
+func (r iteratorForBulkInsertCustomerIdentifications) Values() ([]interface{}, error) {
 	return []interface{}{
 		r.rows[0].ID,
 		r.rows[0].FirstName,
 		r.rows[0].LastName,
 		r.rows[0].MiddleName,
 		r.rows[0].OtherNames,
+		r.rows[0].CustomerID,
 		r.rows[0].Pin,
 		r.rows[0].IdentificationType,
 		r.rows[0].IssuedCountry,
+		r.rows[0].IssuedDate,
 		r.rows[0].PlaceOfBirth,
 		r.rows[0].PlaceOfIssue,
 		r.rows[0].DateOfBirth,
@@ -50,10 +52,10 @@ func (r iteratorForBulkInsertIdentifications) Values() ([]interface{}, error) {
 	}, nil
 }
 
-func (r iteratorForBulkInsertIdentifications) Err() error {
+func (r iteratorForBulkInsertCustomerIdentifications) Err() error {
 	return nil
 }
 
-func (q *Queries) BulkInsertIdentifications(ctx context.Context, arg []BulkInsertIdentificationsParams) (int64, error) {
-	return q.db.CopyFrom(ctx, []string{"identifications"}, []string{"id", "first_name", "last_name", "middle_name", "other_names", "pin", "identification_type", "issued_country", "place_of_birth", "place_of_issue", "date_of_birth", "address_1", "address_2", "city", "state_region", "zip_code", "created_at", "updated_at"}, &iteratorForBulkInsertIdentifications{rows: arg})
+func (q *Queries) BulkInsertCustomerIdentifications(ctx context.Context, arg []BulkInsertCustomerIdentificationsParams) (int64, error) {
+	return q.db.CopyFrom(ctx, []string{"customer_identifications"}, []string{"id", "first_name", "last_name", "middle_name", "other_names", "customer_id", "pin", "identification_type", "issued_country", "issued_date", "place_of_birth", "place_of_issue", "date_of_birth", "address_1", "address_2", "city", "state_region", "zip_code", "created_at", "updated_at"}, &iteratorForBulkInsertCustomerIdentifications{rows: arg})
 }

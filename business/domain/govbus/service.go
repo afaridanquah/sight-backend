@@ -22,6 +22,7 @@ type ServiceConfig func(*Service) error
 func New(repo Repository, logger *logger.Logger, cfgs ...ServiceConfig) (*Service, error) {
 	var ser = &Service{
 		repo: repo,
+		log:  logger,
 	}
 
 	for _, cfg := range cfgs {
@@ -51,19 +52,23 @@ func (srv *Service) Create(ctx context.Context, napp NewIdentification) (Identif
 
 	now := time.Now()
 	bus := Identification{
-		ID:           valueobject.NewID(),
-		CustomerID:   napp.CustomerID,
-		FirstName:    napp.FirstName,
-		LastName:     napp.LastName,
-		MiddleName:   napp.MiddleName,
-		Sex:          napp.Sex,
-		Pin:          napp.Pin,
-		PlaceOfBirth: napp.PlaceOfBirth,
-		DateOfBirth:  napp.DateOfBirth,
-		Nationality:  napp.Nationality,
-		IssuedDate:   napp.IssuedDate,
-		CreatedAt:    now,
-		UpdatedAt:    now,
+		ID:            valueobject.NewID(),
+		CustomerID:    napp.CustomerID,
+		FirstName:     napp.FirstName,
+		LastName:      napp.LastName,
+		MiddleName:    napp.MiddleName,
+		Sex:           napp.Sex,
+		Pin:           napp.Pin,
+		PlaceOfBirth:  napp.PlaceOfBirth,
+		DateOfBirth:   napp.DateOfBirth,
+		Nationality:   napp.Nationality,
+		IssuedDate:    napp.IssuedDate,
+		Country:       napp.Country,
+		BirthCountry:  napp.BirthCountry,
+		Occupation:    napp.Occupation,
+		MaritalStatus: napp.MaritalStatus,
+		CreatedAt:     now,
+		UpdatedAt:     now,
 	}
 
 	// if err := srv.repo.Add(ctx, bus); err != nil {

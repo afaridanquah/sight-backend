@@ -102,12 +102,26 @@ func (srv *Service) CreateMany(ctx context.Context, napps []NewIdentification) (
 		}
 	}
 
-	// srv.log.Info(ctx, "print bus for bulk insert", bus)
-	// fmt.Printf("------- %v", bus)
-
 	if err := srv.repo.AddMany(ctx, bus); err != nil {
 		return []Identification{}, err
 	}
 
 	return bus, nil
+}
+
+func (srv *Service) GetByCustomerID(ctx context.Context, cis string) ([]Identification, error) {
+	ctx, span := otel.AddSpan(ctx, "identificationbus.service.findbycustomerid")
+	defer span.End()
+
+	ci, err := valueobject.ParseCustomerID(cis)
+	if err != nil {
+		return []Identification{}, err
+	}
+
+	res, err := srv.repo.QueryByCustomerID(ctx, ci)
+	if err != nil {
+		return []Identification{}, err
+	}
+
+	return res, nil
 }

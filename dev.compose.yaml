@@ -15,21 +15,6 @@ services:
             - ./:/app/
         depends_on:
             - jaeger
-            - vault
-        networks:
-            - sight
-
-    vault:
-        image: hashicorp/vault
-        ports:
-            - "8300:8300"
-        cap_add:
-            - IPC_LOCK
-        environment:
-            VAULT_DEV_LISTEN_ADDRESS: "0.0.0.0:8300"
-            VAULT_DEV_ROOT_TOKEN_ID: "myroot"
-        networks:
-            - sight
 
     jaeger:
         image: jaegertracing/jaeger:2.3.0
@@ -42,8 +27,6 @@ services:
             - "4317:4317"
             - "4318:4318"
             - "9411:9411"
-        networks:
-            - sight
 
     index:
         image: docker.elastic.co/elasticsearch/elasticsearch:8.14.3
@@ -70,8 +53,6 @@ services:
                 max_replicas_per_node: 1
             restart_policy:
                 condition: on-failure
-        networks:
-            - sight
 
     app:
         image: ghcr.io/opensanctions/yente:4.4.0
@@ -99,19 +80,11 @@ services:
                 delay: 10s
                 max_attempts: 3
                 window: 120s
-        networks:
-            - sight
 
     prometheus:
         image: prom/prometheus
         ports:
             - "9090:9090"
-        networks:
-            - sight
-
-networks:
-    sight:
-        driver: bridge
 
 volumes:
     index-os-data: null

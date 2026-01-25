@@ -3,6 +3,7 @@ package vault
 import (
 	"errors"
 	"fmt"
+	"net/url"
 	"strings"
 
 	"github.com/hashicorp/vault/api"
@@ -20,9 +21,14 @@ var (
 	ErrInvalidVaultData     = errors.New("invalid data in secret")
 )
 
-func New(token, addr, path string) (*Provider, error) {
+func New(token, addr, port, path string) (*Provider, error) {
+	u, err := url.Parse(strings.Join([]string{addr, port}, ":"))
+	if err != nil {
+		return nil, fmt.Errorf("new client: %w", err)
+	}
+
 	config := &api.Config{
-		Address: addr,
+		Address: u.String(),
 	}
 
 	client, err := api.NewClient(config)

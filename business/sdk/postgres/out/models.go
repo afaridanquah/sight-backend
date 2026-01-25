@@ -333,6 +333,29 @@ type Businesses struct {
 	UpdatedAt          pgtype.Timestamp
 }
 
+type CustomerIdentifications struct {
+	ID                 string
+	CustomerID         pgtype.Text
+	FirstName          pgtype.Text
+	LastName           pgtype.Text
+	MiddleName         pgtype.Text
+	OtherNames         pgtype.Text
+	Pin                string
+	IdentificationType IdentificationType
+	IssuedCountry      pgtype.Text
+	IssuedDate         pgtype.Date
+	PlaceOfBirth       pgtype.Text
+	PlaceOfIssue       pgtype.Text
+	DateOfBirth        pgtype.Date
+	Address1           pgtype.Text
+	Address2           pgtype.Text
+	City               pgtype.Text
+	StateRegion        pgtype.Text
+	ZipCode            pgtype.Text
+	CreatedAt          pgtype.Timestamp
+	UpdatedAt          pgtype.Timestamp
+}
+
 type Customers struct {
 	ID              string
 	FirstName       string
@@ -396,28 +419,6 @@ type GovIdentifications struct {
 	UpdatedAt          pgtype.Timestamp
 }
 
-type Identifications struct {
-	ID                 string
-	FirstName          pgtype.Text
-	LastName           pgtype.Text
-	MiddleName         pgtype.Text
-	OtherNames         pgtype.Text
-	Pin                string
-	IdentificationType IdentificationType
-	IssuedCountry      pgtype.Text
-	IssuedDate         pgtype.Date
-	PlaceOfBirth       pgtype.Text
-	PlaceOfIssue       pgtype.Text
-	DateOfBirth        pgtype.Date
-	Address1           pgtype.Text
-	Address2           pgtype.Text
-	City               pgtype.Text
-	StateRegion        pgtype.Text
-	ZipCode            pgtype.Text
-	CreatedAt          pgtype.Timestamp
-	UpdatedAt          pgtype.Timestamp
-}
-
 type Organizations struct {
 	ID        string
 	Name      string
@@ -429,7 +430,7 @@ type Organizations struct {
 
 type Otps struct {
 	ID          string
-	CustomerID  pgtype.Text
+	EntityID    pgtype.Text
 	HashedCode  pgtype.Text
 	Code        pgtype.Text
 	Channel     NullChannel
